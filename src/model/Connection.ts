@@ -1,7 +1,7 @@
 import { attribute, hashKey, table } from '@aws/dynamodb-data-mapper-annotations';
 import { APIGatewayEventRequestContext } from 'aws-lambda';
 
-@table(process.env.DYNAMODB_SUBSCRIPTIONS_TABLE)
+@table(process.env.DYNAMODB_CONNECTION_TABLE)
 /**
  * Connection established with `connection_init`
  */
