@@ -9,7 +9,7 @@ export type ServerArgs = {
   schema: GraphQLSchema;
   dynamodb: DynamoDB;
   gateway: ApiGatewayManagementApi | ((event: APIGatewayEvent) => ApiGatewayManagementApi);
-  onConnect: (e: APIGatewayEvent) => MaybePromise<void>;
+  onConnect: (e: { event: APIGatewayEvent }) => MaybePromise<void>;
   onDisconnect: (e: { event: APIGatewayEvent }) => MaybePromise<void>;
   /* Takes connection_init event and returns payload to be persisted (may include auth steps) */
   onConnectionInit: (e: { event: APIGatewayEvent, message: ConnectionInitMessage }) => MaybePromise<object>;
