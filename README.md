@@ -4,8 +4,14 @@
 
 ```ts
 const server = createServer({
+  dynamodb,
   schema,
   gateway,
+  onConnect,
+  onDisconnect,
+  onConnectionInit,
+  onSubscribe,
+  onComplete
 });
 
 export const handler = server.handler;
@@ -34,8 +40,8 @@ export const resolver = {
     mySubscription: {
       resolve: (event, args, context) => {/* ... */}
       subscribe: subscribe('MY_TOPIC'),
-      onStart: () => {/* ... */},
-      onStop: () => {/* ... */}
+      onStart: (root, args) => {/* ... */},
+      onStop: (root, args) => {/* ... */}
     }
   }
 }
@@ -56,7 +62,10 @@ const server = createServer({
     }
 
     // Prevent sensitive data from being written to DB
-    delete message.payload.token;
+    return {
+      ...message.payload,
+      token: undefined,
+    };
   }
 })
 ```
