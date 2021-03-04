@@ -16,7 +16,7 @@ export const disconnect: MessageHandler<CompleteMessage> = (c) => async ({
       connectionId: equals(event.requestContext.connectionId),
     });
 
-    let deletions = [];
+    let deletions = [] as Promise<any>[];
     for await (const entity of entities) {
       deletions = [
         ...deletions,
@@ -51,6 +51,6 @@ export const disconnect: MessageHandler<CompleteMessage> = (c) => async ({
 
     await Promise.all(deletions);
   } catch (err) {
-    // send some kind of error?
+    c.onError(err, { event });
   }
 };

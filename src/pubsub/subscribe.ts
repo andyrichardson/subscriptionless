@@ -4,7 +4,7 @@ import { Message } from 'graphql-ws';
 export const subscribe = (topic: string) => subscribeHandler({ topics: [topic] });
 
 const subscribeHandler = (c: { topics: string[] }) => {
-  const handler = (...handlerArgs) => {
+  const handler = () => {
     const iterator = async function* () {
       yield null;
     };
@@ -12,21 +12,8 @@ const subscribeHandler = (c: { topics: string[] }) => {
     return iterator();
   };
   handler.getTopics = () => c.topics;
+  return handler;
 };
-
-/*
-const execContext = buildExecutionContext(
-  schema,
-  document,
-  undefined,
-  {}, // Context
-  { id: undefined }
-);
-
-      Array.isArray(execContext)
-        ? { errors: execContext }
-        : executeSubscription(execContext),
-*/
 
 /* 
 Todo - Add support for multiple topics and filters

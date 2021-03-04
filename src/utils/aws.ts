@@ -16,3 +16,7 @@ export const sendMessage = (c: ServerClosure) => (a: {
       Data: JSON.stringify(a.message),
     })
     .promise();
+
+export const deleteConnection = (c: ServerClosure) => (a: {
+  connectionId: string;
+}) => c.gateway.deleteConnection({ ConnectionId: a.connectionId });

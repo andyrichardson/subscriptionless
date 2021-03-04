@@ -15,13 +15,15 @@ export type ServerArgs = {
   onConnectionInit: (e: { event: APIGatewayEvent, message: ConnectionInitMessage }) => MaybePromise<object>;
   onSubscribe: (e: { event: APIGatewayEvent, message: SubscribeMessage }) => MaybePromise<void>;
   onComplete: (e: { event: APIGatewayEvent, message: CompleteMessage }) => MaybePromise<void>;
+  onError: (error: any, context: any) => void;
 };
 
 type MaybePromise<T> = T | Promise<T>;
 
 export type ServerClosure = {
   mapper: DataMapper;
-} & ServerArgs;
+  gateway: ApiGatewayManagementApi;
+} & Omit<ServerArgs, 'gateway'>;
 
 export type WebsocketResponse = {
   statusCode: number,

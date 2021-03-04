@@ -1,7 +1,7 @@
 import { DataMapper } from "@aws/dynamodb-data-mapper";
 import { ConnectionInitMessage, MessageType } from "graphql-ws";
 import { assign, GraphQLConnection } from "../model";
-import { sendMessage, promisify } from "../utils";
+import { sendMessage, deleteConnection, promisify } from "../utils";
 import { MessageHandler } from "./types";
 
 export const connection_init: MessageHandler<ConnectionInitMessage> = (
@@ -22,6 +22,7 @@ export const connection_init: MessageHandler<ConnectionInitMessage> = (
       message: { type: MessageType.ConnectionAck },
     });
   } catch (err) {
-    // Close connection
+    c.onError(err, { event, message });
+    await deleteConnection(c)({ connectionId: event.requestContext.connectionId! });
   }
 };

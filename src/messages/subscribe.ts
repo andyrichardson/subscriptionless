@@ -5,7 +5,7 @@ import {
   assertValidExecutionArguments,
 } from "graphql/execution/execute";
 import { MessageHandler } from "./types";
-import { getResolverAndArgs, promisify, sendMessage } from "../utils";
+import { deleteConnection, getResolverAndArgs, promisify, sendMessage } from "../utils";
 import { assign, Subscription } from "../model";
 import { ServerClosure } from "../types";
 
@@ -34,7 +34,16 @@ export const subscribe: MessageHandler<SubscribeMessage> = (c) => async ({
     );
 
     if (!("operation" in execContext)) {
-      throw execContext;
+      return sendMessage(c)({
+        connectionId: event.requestContext.connectionId!,
+        message: {
+          type: MessageType.Next,
+          id: message.id,
+          payload: {
+            errors: err,
+          },
+        },
+      });
     }
 
     const [field, root, args, context, info] = getResolverAndArgs(c)(
@@ -65,17 +74,8 @@ export const subscribe: MessageHandler<SubscribeMessage> = (c) => async ({
       })
     );
   } catch (err) {
-    // Return error on failed subscribe
-    return sendMessage(c)({
-      connectionId: event.requestContext.connectionId!,
-      message: {
-        type: MessageType.Next,
-        id: message.id,
-        payload: {
-          errors: err,
-        },
-      },
-    });
+    c.onError(err, { event, message });
+    await deleteConnection(c)({ connectionId: event.requestContext.connectionId! });
   }
 };
 

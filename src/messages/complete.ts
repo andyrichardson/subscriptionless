@@ -2,7 +2,7 @@ import { parse } from "graphql";
 import { CompleteMessage, MessageType } from "graphql-ws";
 import { buildExecutionContext } from "graphql/execution/execute";
 import { assign, Subscription } from "../model";
-import { getResolverAndArgs, promisify, sendMessage } from "../utils";
+import { deleteConnection, getResolverAndArgs, promisify, sendMessage } from "../utils";
 import { MessageHandler } from "./types";
 
 export const complete: MessageHandler<CompleteMessage> = (c) => async ({
@@ -41,6 +41,7 @@ export const complete: MessageHandler<CompleteMessage> = (c) => async ({
   
     await c.mapper.delete(entity);
   } catch(err) {
-    // send some kind of error?
+    c.onError(err, { event, message });
+    await deleteConnection(c)({ connectionId: event.requestContext.connectionId! });
   }
 };
