@@ -1,17 +1,19 @@
-import { APIGatewayEvent } from 'aws-lambda';
-import { Message } from 'graphql-ws';
+import { APIGatewayEvent } from "aws-lambda";
+import { Message } from "graphql-ws";
 
-export const subscribe = (topic: string) => subscribeHandler({ topics: [topic] });
+export const subscribe = (topic: string) =>
+  subscribeHandler({ topics: [topic] });
 
 const subscribeHandler = (c: { topics: string[] }) => {
   const handler = (...handlerArgs) => {
     const iterator = async function* () {
-      yield null;
+      yield handlerArgs[2].subscription.event;
     };
 
     return iterator();
   };
   handler.getTopics = () => c.topics;
+  return handler;
 };
 
 /*
