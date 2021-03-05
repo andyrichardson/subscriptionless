@@ -1,35 +1,37 @@
-import { APIGatewayEvent } from 'aws-lambda';
-import { Message } from 'graphql-ws';
+import { SubscribeArgs, SubscribeHandler, SubscribePsuedoIterable, SubscriptionDefinition } from "../types";
 
-export const subscribe = (topic: string) => subscribeHandler({ topics: [topic] });
+/** Creates subscribe handler */
+export const subscribe = (topic: string) => (...args: SubscribeArgs) =>
+  createHandler({ definitions: [{ topic }] });
 
-const subscribeHandler = (c: { topics: string[] }) => {
-  const handler = () => {
-    const iterator = async function* () {
-      yield null;
-    };
+/** Add filter to subscribe handler */
+export const withFilter = (
+  handler: SubscribeHandler,
+  filter: object | ((...args: SubscribeArgs) => object)
+) => (...args: SubscribeArgs) => {
+  const iterable = handler(...args);
+  if (iterable.definitions.length !== 1) {
+    throw Error("Cannot call 'withFilter' on invalid type");
+  }
 
-    return iterator();
-  };
-  handler.getTopics = () => c.topics;
-  return handler;
+  return createHandler({
+    definitions: [
+      {
+        ...iterable.definitions[0],
+        filter: typeof filter === "function" ? filter(...args) : filter,
+      },
+    ],
+  });
 };
 
-/* 
-Todo - Add support for multiple topics and filters
+/** Merge multiple subscribe handlers */
+export const concat = (...handlers: SubscribeHandler[]) => (...args: SubscribeArgs) => createHandler({ definitions: handlers.map((h) => h(...args).definitions).flat() });
 
-// 1
-subscribe('TOPIC_A')
+const createHandler = (arg: { definitions: SubscriptionDefinition[] }) => {
+  const h: SubscribePsuedoIterable = (() => {
+    throw Error("Subscription handler should not have been called");
+  }) as any;
+  h.definitions = arg.definitions;
+  return h;
+};
 
-// 2
-subscribe(['TOPIC_A', 'TOPIC_B'])
-
-// 3
-withFilter(subscribe('TOPIC_A'), { id: 1234 });
-
-// 4
-concat(
-  withFilter(subscribe('TOPIC_A'), { id: 1234 }),
-  subscribe('TOPIC_B')
-)
-*/

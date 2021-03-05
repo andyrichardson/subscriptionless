@@ -30,3 +30,17 @@ export type WebsocketResponse = {
   headers?: Record<string, string>;
   body: string;
 }
+
+export type SubscriptionDefinition = {
+  topic: string;
+  filter?: object | (() => void);
+};
+
+export type SubscribeHandler = (...args: any[]) => SubscribePsuedoIterable;
+
+export type SubscribePsuedoIterable = {
+  (): void;
+  definitions: SubscriptionDefinition[];
+};
+
+export type SubscribeArgs = any[];

@@ -7,7 +7,7 @@ import {
 import { MessageHandler } from "./types";
 import { deleteConnection, getResolverAndArgs, promisify, sendMessage } from "../utils";
 import { assign, Subscription } from "../model";
-import { ServerClosure } from "../types";
+import { ServerClosure, SubscribeHandler } from "../types";
 
 export const subscribe: MessageHandler<SubscribeMessage> = (c) => async ({
   event,
@@ -40,7 +40,7 @@ export const subscribe: MessageHandler<SubscribeMessage> = (c) => async ({
           type: MessageType.Next,
           id: message.id,
           payload: {
-            errors: err,
+            errors: execContext,
           },
         },
       });
@@ -56,12 +56,13 @@ export const subscribe: MessageHandler<SubscribeMessage> = (c) => async ({
       await onStart(root, args, context, info);
     }
 
-    const topics = (field.subscribe as any).getTopics(); // Access subscribe instance
+    const topicDefinitions = (field.subscribe as SubscribeHandler)(root, args, context, info).definitions; // Access subscribe instance
     await Promise.all(
-      topics.map(async (topic) => {
+      topicDefinitions.map(async ({ topic, filter }) => {
         const subscription = assign(new Subscription(), {
           id: `${event.requestContext.connectionId}|${message.id}`,
           topic,
+          filter: filter || {},
           subscriptionId: message.id,
           subscription: {
             variableValues: args,
@@ -83,7 +84,7 @@ export const subscribe: MessageHandler<SubscribeMessage> = (c) => async ({
 const validateMessage = (c: ServerClosure) => (message: SubscribeMessage) => {
   const errors = validate(c.schema, parse(message.payload.query));
 
-  if (errors || errors.length) {
+  if (errors && errors.length) {
     return errors;
   }
 

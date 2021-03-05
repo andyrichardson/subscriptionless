@@ -3,7 +3,7 @@ import { buildResolveInfo, collectFields, ExecutionContext, getFieldDef } from "
 import { addPath } from "graphql/jsutils/Path";
 import { ServerClosure } from "../types";
 
-export const getResolverAndArgs = (c: ServerClosure) => (execContext: ExecutionContext) => {
+export const getResolverAndArgs = (c: Omit<ServerClosure, 'gateway'>) => (execContext: ExecutionContext) => {
   // Taken from graphql js - https://github.com/graphql/graphql-js/blob/main/src/subscription/subscribe.js#L190
   const type = getOperationRootType(c.schema, execContext.operation);
   const fields = collectFields(

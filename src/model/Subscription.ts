@@ -17,6 +17,9 @@ export class Subscription {
   })
   topic: string;
 
+  @attribute()
+  filter: object;
+
   @attribute({ type: 'String' })
   connectionId: string;
 
@@ -36,6 +39,6 @@ export class Subscription {
     variables?: any;
     /** Value of variables for user provided subscription */
     variableValues?: any;
-    operationName?: string;
+    operationName?: string | null;
   };
 }
