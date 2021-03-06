@@ -34,3 +34,6 @@ export const createServer = (opts: ServerArgs) => {
     publish: publish(closure),
   };
 };
+
+export { prepareResolvers } from './utils';
+export * from './pubsub/subscribe';

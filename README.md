@@ -1,23 +1,58 @@
-## Usage
+## Setup
 
-### Creating a handler
+#### Create a server instance.
 
 ```ts
 const server = createServer({
   dynamodb,
   schema,
   gateway,
-  onConnect,
-  onDisconnect,
-  onConnectionInit,
-  onSubscribe,
-  onComplete
 });
+```
 
+#### Export the handler.
+
+```ts
 export const handler = server.handler;
 ```
 
-### Subscribing to events
+#### Configure API Gateway
+
+Set up API Gateway to route websocket events to the exported handler.
+
+Here is a simple serverless framework example.
+
+```yaml
+functions:
+  websocket:
+    name: my-subscription-lambda
+    handler: ./handler.handler
+    events:
+      - websocket:
+          route: $connect
+      - websocket:
+          route: $disconnect
+      - websocket:
+          route: $default
+```
+
+#### Create DynanmoDB tables for state
+
+In-flight connections and subscriptions need to be persisted
+
+Here is a simple serverless framework example.
+
+```yaml
+todo
+```
+
+## Schema
+
+### PubSub
+
+#### Subscribing to events
+
+Subscribing to messages is similar to the `PubSub` library.
 
 ```ts
 import { subscribe } from 'gqsub/subscribe';
@@ -32,7 +67,54 @@ export const resolver = {
 }
 ```
 
-### Handling subscription start and stop
+#### Filtering events
+
+The filter object/function must always resolve to a serializable object.
+
+```ts
+import { withFilter, subscribe } from "gqsub/subscribe";
+
+// Query agnostic filter
+withFilter(subscribe("MY_TOPIC"), {
+  attr1: "`attr1` must have this value",
+  attr2: {
+    attr3: "Nested attributes work fine",
+  },
+});
+
+// Query agnostic filter
+withFilter(subscribe("MY_TOPIC"), (root, args, context, info) => ({
+  userId: args.userId,
+}));
+```
+
+#### Concatenating subscriptions
+
+```tsx
+import { concat, subscribe } from "gqsub/subscribe";
+
+// Query agnostic filter
+concat(subscribe("TOPIC_1"), subscribe("TOPIC_2"));
+```
+
+### Subscription side-effects
+
+Event handlers for subscription start/stop can be provided.
+
+#### Enabling side effects
+
+For `onStart` and `onStop` side effects to work, resolvers must be passed to `prepareResolvers`
+
+```ts
+import { prepareResolvers } from "gqsub/subscribe";
+
+const schema = makeExecutableSchema({
+  typedefs,
+  resolvers: prepareResolvers(resolvers),
+});
+```
+
+#### Adding handlers
 
 ```ts
 export const resolver = {
@@ -47,9 +129,67 @@ export const resolver = {
 }
 ```
 
+## Publishing events
+
+Use the `publish` function to publish events to active subscriptions.
+
+```tsx
+server.publish({
+  type: "MY_TOPIC",
+  payload: "HELLO",
+});
+```
+
+Events can come from many sources
+
+```tsx
+// SNS Event
+export const SNSHandler = (event) =>
+  Promise.all(
+    event.Records.map((r) =>
+      server.publish({
+        type: r.Sns.subject,
+        payload: r.Sns.message,
+      })
+    )
+  );
+
+// Manual Invocation
+export const invocationHandler = (payload) =>
+  server.publish({ type: "MY_TOPIC", payload });
+```
+
+## Client
+
+## Events
+
+### Connect (onConnect)
+
+Called when a websocket connection is first established.
+
+```ts
+const server = createServer({
+  /* ... */
+  onConnect: ({ event }) => {/* */},
+});
+```
+
+### Disconnect (onDisconnect)
+
+Called when a websocket connection is disconnected.
+
+```ts
+const server = createServer({
+  /* ... */
+  onDisconnect: ({ event }) => {/* */},
+});
+```
+
 ### Authorization (connection_init)
 
 `onConnectionInit` can be used to verify the `connection_init` payload prior to persistence.
+
+> **Note:** Any sensitive data in the incoming message should be removed at this stage.
 
 ```ts
 const server = createServer({
@@ -66,6 +206,40 @@ const server = createServer({
       ...message.payload,
       token: undefined,
     };
-  }
-})
+  },
+});
+```
+
+### Subscribe (onSubscribe)
+
+Called when any subscription message is received.
+
+```ts
+const server = createServer({
+  /* ... */
+  onSubscribe: ({ event, message }) => {/* */},
+});
+```
+
+
+### Complete (onComplete)
+
+Called when any complete message is received.
+
+```ts
+const server = createServer({
+  /* ... */
+  onComplete: ({ event, message }) => {/* */},
+});
+```
+
+### Error (onError)
+
+Called when any error is encountered
+
+```ts
+const server = createServer({
+  /* ... */
+  onError: (error, context) => {/* */},
+});
 ```

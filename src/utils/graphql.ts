@@ -1,9 +1,16 @@
 import { getOperationRootType } from "graphql";
-import { buildResolveInfo, collectFields, ExecutionContext, getFieldDef } from "graphql/execution/execute";
+import {
+  buildResolveInfo,
+  collectFields,
+  ExecutionContext,
+  getFieldDef,
+} from "graphql/execution/execute";
 import { addPath } from "graphql/jsutils/Path";
 import { ServerClosure } from "../types";
 
-export const getResolverAndArgs = (c: Omit<ServerClosure, 'gateway'>) => (execContext: ExecutionContext) => {
+export const getResolverAndArgs = (c: Omit<ServerClosure, "gateway">) => (
+  execContext: ExecutionContext
+) => {
   // Taken from graphql js - https://github.com/graphql/graphql-js/blob/main/src/subscription/subscribe.js#L190
   const type = getOperationRootType(c.schema, execContext.operation);
   const fields = collectFields(
@@ -11,7 +18,7 @@ export const getResolverAndArgs = (c: Omit<ServerClosure, 'gateway'>) => (execCo
     type,
     execContext.operation.selectionSet,
     Object.create(null),
-    Object.create(null),
+    Object.create(null)
   );
   const responseNames = Object.keys(fields);
   const responseName = responseNames[0];
@@ -27,6 +34,37 @@ export const getResolverAndArgs = (c: Omit<ServerClosure, 'gateway'>) => (execCo
     null,
     execContext.variableValues,
     execContext.contextValue,
-    info
+    info,
   ];
 };
+
+const prepareResolver = <T extends object>(r: T) => {
+  visit<any>(r, (node) => {
+    if (!("resolve" in node)) {
+      return;
+    }
+
+    // Add event handlers to resolver fn so they can be accessed later
+    ["onStart", "onStop"].forEach((key) => (node.resolve[key] = node[key]));
+    return false;
+  });
+  return r;
+};
+
+export const prepareResolvers = <T extends object | object[]>(arg: T) =>
+  Array.isArray(arg) ? arg.map(prepareResolver) as T[] : prepareResolver(arg);
+
+const visit = <T = object>(node: T, handler: (node: T) => any) =>
+  Object.values(node).forEach((value) => {
+    console.log(value);
+    if (typeof value !== "object") {
+      return;
+    }
+
+    // Don't traverse deeper
+    if (handler(value) === false) {
+      return;
+    }
+
+    visit(value, handler);
+  });

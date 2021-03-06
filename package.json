@@ -1,8 +1,9 @@
 {
-  "name": "gqsub",
-  "version": "1.0.0",
+  "name": "subscriptionless",
+  "version": "0.0.1",
   "description": "",
   "main": "index.js",
+  "files": ["LICENSE", "README.md", "dist"],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -10,12 +11,16 @@
     "type": "git",
     "url": "git+https://github.com/andyrichardson/gqsub.git"
   },
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/andyrichardson/gqsub/issues"
+  "author": "Andy Richardson (andyrichardson)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/andyrichardson/subscriptionless.git"
   },
-  "homepage": "https://github.com/andyrichardson/gqsub#readme",
+  "bugs": {
+    "url": "https://github.com/andyrichardson/subscriptionless/issues"
+  },
+  "homepage": "https://github.com/andyrichardson/subscriptionless#readme",
   "devDependencies": {
     "@types/aws-lambda": "^8.10.72",
     "aws-sdk": "^2.844.0",
