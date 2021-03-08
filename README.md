@@ -3,6 +3,8 @@
 #### Create a server instance.
 
 ```ts
+import { createServer } from 'subscriptionless';
+
 const server = createServer({
   dynamodb,
   schema,
@@ -55,7 +57,7 @@ todo
 Subscribing to messages is similar to the `PubSub` library.
 
 ```ts
-import { subscribe } from 'gqsub/subscribe';
+import { subscribe } from 'subscriptionless/subscribe';
 
 export const resolver = {
   Subscribe: {
@@ -72,7 +74,7 @@ export const resolver = {
 The filter object/function must always resolve to a serializable object.
 
 ```ts
-import { withFilter, subscribe } from "gqsub/subscribe";
+import { withFilter, subscribe } from "subscriptionless/subscribe";
 
 // Query agnostic filter
 withFilter(subscribe("MY_TOPIC"), {
@@ -91,7 +93,7 @@ withFilter(subscribe("MY_TOPIC"), (root, args, context, info) => ({
 #### Concatenating subscriptions
 
 ```tsx
-import { concat, subscribe } from "gqsub/subscribe";
+import { concat, subscribe } from "subscriptionless/subscribe";
 
 // Query agnostic filter
 concat(subscribe("TOPIC_1"), subscribe("TOPIC_2"));
@@ -106,7 +108,7 @@ Event handlers for subscription start/stop can be provided.
 For `onStart` and `onStop` side effects to work, resolvers must be passed to `prepareResolvers`
 
 ```ts
-import { prepareResolvers } from "gqsub/subscribe";
+import { prepareResolvers } from "subscriptionless/subscribe";
 
 const schema = makeExecutableSchema({
   typedefs,
