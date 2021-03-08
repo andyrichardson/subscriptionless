@@ -163,9 +163,9 @@ export const invocationHandler = (payload) =>
 
 ## Client
 
-## Events
+### Events
 
-### Connect (onConnect)
+#### Connect (onConnect)
 
 Called when a websocket connection is first established.
 
@@ -176,7 +176,7 @@ const server = createServer({
 });
 ```
 
-### Disconnect (onDisconnect)
+#### Disconnect (onDisconnect)
 
 Called when a websocket connection is disconnected.
 
@@ -187,7 +187,7 @@ const server = createServer({
 });
 ```
 
-### Authorization (connection_init)
+#### Authorization (connection_init)
 
 `onConnectionInit` can be used to verify the `connection_init` payload prior to persistence.
 
@@ -212,7 +212,7 @@ const server = createServer({
 });
 ```
 
-### Subscribe (onSubscribe)
+#### Subscribe (onSubscribe)
 
 Called when any subscription message is received.
 
@@ -224,7 +224,7 @@ const server = createServer({
 ```
 
 
-### Complete (onComplete)
+#### Complete (onComplete)
 
 Called when any complete message is received.
 
@@ -235,7 +235,7 @@ const server = createServer({
 });
 ```
 
-### Error (onError)
+#### Error (onError)
 
 Called when any error is encountered
 
