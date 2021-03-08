@@ -45,7 +45,42 @@ In-flight connections and subscriptions need to be persisted
 Here is a simple serverless framework example.
 
 ```yaml
-todo
+resources:
+  Resources:
+    # Table for tracking connections
+    connectionsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: connectionsTable
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+    # Table for tracking subscriptions
+    subscriptionsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: subscriptionsTable
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+          - AttributeName: topic
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+          - AttributeName: topic
+            KeyType: RANGE
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        # TODO: Add GSI definitions for subscriptions
+
 ```
 
 ## Schema
