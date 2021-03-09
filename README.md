@@ -45,7 +45,9 @@ functions:
 
 In-flight connections and subscriptions need to be persisted
 
-Here is a simple serverless framework example.
+<details>
+  
+<summary>Here is a serverless framework example.</summary>
 
 ```yaml
 resources:
@@ -54,7 +56,7 @@ resources:
     connectionsTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: connectionsTable
+        TableName: ${self:provider.environment.CONNECTIONS_TABLE}
         AttributeDefinitions:
           - AttributeName: id
             AttributeType: S
@@ -68,23 +70,35 @@ resources:
     subscriptionsTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: subscriptionsTable
+        TableName: ${self:provider.environment.SUBSCRIPTIONS_TABLE}
         AttributeDefinitions:
           - AttributeName: id
             AttributeType: S
           - AttributeName: topic
+            AttributeType: S
+          - AttributeName: connectionId
             AttributeType: S
         KeySchema:
           - AttributeName: id
             KeyType: HASH
           - AttributeName: topic
             KeyType: RANGE
+        GlobalSecondaryIndexes:
+          - IndexName: connectionIndex
+            KeySchema:
+              - AttributeName: connectionId
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+            ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
-        # TODO: Add GSI definitions for subscriptions
-
 ```
+
+</details>
 
 ## Schema
 
