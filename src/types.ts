@@ -2,7 +2,7 @@ import { ConnectionInitMessage, SubscribeMessage, CompleteMessage } from 'graphq
 import { DataMapper } from '@aws/dynamodb-data-mapper';
 import { APIGatewayEvent } from 'aws-lambda';
 import { GraphQLSchema } from 'graphql';
-import DynamoDB from 'aws-sdk/clients/dynamodb';
+import { DynamoDB } from 'aws-sdk';
 import { Subscription, Connection } from './model';
 
 export type ServerArgs = {

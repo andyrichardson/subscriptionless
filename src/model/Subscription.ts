@@ -1,7 +1,5 @@
-import { DynamoDbTable } from '@aws/dynamodb-data-mapper';
 import { attribute, hashKey, rangeKey } from '@aws/dynamodb-data-mapper-annotations';
 import { APIGatewayEventRequestContext } from 'aws-lambda';
-import { prototype } from 'aws-sdk/clients/dynamodb';
 
 /**
  * Active subscriptions
@@ -21,7 +19,7 @@ export class Subscription {
   @attribute()
   filter: object;
 
-  @attribute({ type: 'String' })
+  @attribute({ type: 'String', indexKeyConfigurations: { 'connectionIndex': 'HASH' } })
   connectionId: string;
 
   @attribute({ type: 'String' })

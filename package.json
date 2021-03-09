@@ -37,6 +37,7 @@
     "@aws/dynamodb-expressions": "^0.7.3"
   },
   "peerDependencies": {
-    "graphql": ">= 14.0.0"
+    "graphql": ">= 14.0.0",
+    "aws-sdk": ">= 2.844.0"
   }
 }

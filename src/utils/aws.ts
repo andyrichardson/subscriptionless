@@ -1,4 +1,4 @@
-import ApiGatewayManagementApi from "aws-sdk/clients/apigatewaymanagementapi";
+import { ApiGatewayManagementApi }from "aws-sdk";
 import { APIGatewayEventRequestContext } from "aws-lambda";
 import {
   ConnectionAckMessage,
@@ -14,11 +14,11 @@ export const sendMessage = (
       | NextMessage
       | CompleteMessage
       | ErrorMessage;
-  } & Pick<APIGatewayEventRequestContext, "connectionId" | "domainName">
+  } & Pick<APIGatewayEventRequestContext, "connectionId" | "domainName" | "stage">
 ) =>
   new ApiGatewayManagementApi({
     apiVersion: "latest",
-    endpoint: a.domainName,
+    endpoint: `${a.domainName}/${a.stage}`,
   })
     .postToConnection({
       ConnectionId: a.connectionId!,
@@ -27,11 +27,11 @@ export const sendMessage = (
     .promise();
 
 export const deleteConnection = (
-  a: Pick<APIGatewayEventRequestContext, "connectionId" | "domainName">
+  a: Pick<APIGatewayEventRequestContext, "connectionId" | "domainName" | 'stage'>
 ) =>
   new ApiGatewayManagementApi({
     apiVersion: "latest",
-    endpoint: a.domainName,
+    endpoint: `${a.domainName}/${a.stage}`,
   })
     .deleteConnection({ ConnectionId: a.connectionId! })
     .promise();

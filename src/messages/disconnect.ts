@@ -3,16 +3,24 @@ import { equals } from "@aws/dynamodb-expressions";
 import { buildExecutionContext } from "graphql/execution/execute";
 import { getResolverAndArgs, promisify } from "../utils";
 import { MessageHandler } from "./types";
+import { assign } from "../model";
 
-export const disconnect: MessageHandler<null> = (c) => async ({
-  event,
-}) => {
+export const disconnect: MessageHandler<null> = (c) => async ({ event }) => {
   try {
     await promisify(() => c.onDisconnect?.({ event }));
 
-    const entities = await c.mapper.query(c.model.Subscription, {
-      connectionId: equals(event.requestContext.connectionId),
-    });
+    const connection = await c.mapper.get(
+      assign(new c.model.Connection(), {
+        id: event.requestContext.connectionId!,
+      })
+    );
+    const entities = await c.mapper.query(
+      c.model.Subscription,
+      {
+        connectionId: equals(event.requestContext.connectionId),
+      },
+      { indexName: "connectionIndex" }
+    );
 
     let deletions = [] as Promise<any>[];
     for await (const entity of entities) {
@@ -47,7 +55,7 @@ export const disconnect: MessageHandler<null> = (c) => async ({
       ];
     }
 
-    await Promise.all(deletions);
+    await Promise.all([deletions, c.mapper.delete(connection)]);
   } catch (err) {
     await promisify(() => c.onError?.(err, { event }));
   }

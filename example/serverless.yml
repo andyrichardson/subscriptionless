@@ -12,6 +12,10 @@ provider:
         - dynamodb:PutItem
         - dynamodb:DeleteItem
       Resource: "*"
+    - Effect: Allow
+      Action:
+        - execute-api:*
+      Resource: "*"
   environment:
     SUBSCRIPTIONS_TABLE: subscriptions
     CONNECTIONS_TABLE: connections
@@ -53,11 +57,23 @@ resources:
             AttributeType: S
           - AttributeName: topic
             AttributeType: S
+          - AttributeName: connectionId
+            AttributeType: S
         KeySchema:
           - AttributeName: id
             KeyType: HASH
           - AttributeName: topic
             KeyType: RANGE
+        GlobalSecondaryIndexes:
+          - IndexName: connectionIndex
+            KeySchema:
+              - AttributeName: connectionId
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+            ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
