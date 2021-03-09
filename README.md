@@ -1,3 +1,7 @@
+## About
+
+**WIP:** A library for using GraphQL subscriptions with AWS Lambda
+
 ## Setup
 
 #### Create a server instance.
@@ -8,7 +12,6 @@ import { createServer } from 'subscriptionless';
 const server = createServer({
   dynamodb,
   schema,
-  gateway,
 });
 ```
 
