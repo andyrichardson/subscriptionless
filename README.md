@@ -128,7 +128,7 @@ The filter object/function must always resolve to a serializable object.
 ```ts
 import { withFilter, subscribe } from "subscriptionless/subscribe";
 
-// Query agnostic filter
+// Subscription agnostic filter
 withFilter(subscribe("MY_TOPIC"), {
   attr1: "`attr1` must have this value",
   attr2: {
@@ -136,7 +136,7 @@ withFilter(subscribe("MY_TOPIC"), {
   },
 });
 
-// Query agnostic filter
+// Subscription specific filter
 withFilter(subscribe("MY_TOPIC"), (root, args, context, info) => ({
   userId: args.userId,
 }));
