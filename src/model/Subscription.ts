@@ -1,7 +1,8 @@
-import { attribute, hashKey, rangeKey, table } from '@aws/dynamodb-data-mapper-annotations';
+import { DynamoDbTable } from '@aws/dynamodb-data-mapper';
+import { attribute, hashKey, rangeKey } from '@aws/dynamodb-data-mapper-annotations';
 import { APIGatewayEventRequestContext } from 'aws-lambda';
+import { prototype } from 'aws-sdk/clients/dynamodb';
 
-@table(process.env.DYNAMODB_SUBSCRIPTIONS_TABLE)
 /**
  * Active subscriptions
  */

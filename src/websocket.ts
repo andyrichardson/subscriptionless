@@ -7,11 +7,14 @@ export const handleWebSocket = (
   c: ServerClosure
 ): Handler<APIGatewayEvent, WebsocketResponse> => async (event, context) => {
   if (!event.requestContext) {
-    return;
+    return {
+      statusCode: 200,
+      body: ""
+    };
   }
 
   if (event.requestContext.eventType === "CONNECT") {
-    await c.onConnect({ event });
+    await c.onConnect?.({ event });
     return {
       statusCode: 200,
       headers: {
@@ -22,7 +25,7 @@ export const handleWebSocket = (
   }
 
   if (event.requestContext.eventType === "MESSAGE") {
-    const message = JSON.parse(event.body);
+    const message = JSON.parse(event.body!);
 
     if (message.type === MessageType.ConnectionInit) {
       await connection_init(c)({ event, message });
@@ -50,10 +53,15 @@ export const handleWebSocket = (
   }
 
   if (event.requestContext.eventType === "DISCONNECT") {
-    await disconnect(c)({ event, message: undefined });
+    await disconnect(c)({ event, message: null });
     return {
       statusCode: 200,
       body: "",
     };
+  }
+
+  return {
+    statusCode: 200,
+    body: ""
   }
 };

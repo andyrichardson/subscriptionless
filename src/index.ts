@@ -3,31 +3,27 @@ import { Handler } from "aws-lambda";
 import { ServerArgs } from "./types";
 import { handleWebSocket } from "./websocket";
 import { publish } from "./pubsub/publish";
+import { createModel, Connection, Subscription } from "./model";
 
 export const createServer = (opts: ServerArgs) => {
   const closure = {
     ...opts,
+    model: {
+      Subscription: createModel({
+        model: Subscription,
+        table:
+          opts.tableNames?.subscriptions || "subscriptionless_subscriptions",
+      }),
+      Connection: createModel({
+        model: Connection,
+        table: opts.tableNames?.connections || "subscriptionless_connections",
+      }),
+    },
     mapper: new DataMapper({ client: opts.dynamodb }),
-  };
+  } as const;
 
-  const handler: Handler = (...args) => {
-    const closure = {
-      ...opts,
-      gateway:
-        typeof opts.gateway === "function"
-          ? opts.gateway(args[0])
-          : opts.gateway,
-      mapper: new DataMapper({ client: opts.dynamodb }),
-    };
-
-    return handleWebSocket({
-      ...closure,
-      gateway:
-        typeof opts.gateway === "function"
-          ? opts.gateway(args[0])
-          : opts.gateway,
-    })(...args);
-  };
+  const handler: Handler = (...args) =>
+    handleWebSocket(closure)(...args);
 
   return {
     handler,
@@ -35,5 +31,5 @@ export const createServer = (opts: ServerArgs) => {
   };
 };
 
-export { prepareResolvers } from './utils';
-export * from './pubsub/subscribe';
+export { prepareResolvers } from "./utils";
+export * from "./pubsub/subscribe";

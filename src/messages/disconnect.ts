@@ -1,18 +1,16 @@
 import { parse } from "graphql";
 import { equals } from "@aws/dynamodb-expressions";
-import { CompleteMessage, MessageType } from "graphql-ws";
 import { buildExecutionContext } from "graphql/execution/execute";
-import { Subscription } from "../model";
-import { getResolverAndArgs, promisify, sendMessage } from "../utils";
+import { getResolverAndArgs, promisify } from "../utils";
 import { MessageHandler } from "./types";
 
-export const disconnect: MessageHandler<CompleteMessage> = (c) => async ({
+export const disconnect: MessageHandler<null> = (c) => async ({
   event,
 }) => {
   try {
-    await promisify(() => c.onDisconnect({ event }));
+    await promisify(() => c.onDisconnect?.({ event }));
 
-    const entities = await c.mapper.query(Subscription, {
+    const entities = await c.mapper.query(c.model.Subscription, {
       connectionId: equals(event.requestContext.connectionId),
     });
 
@@ -51,6 +49,6 @@ export const disconnect: MessageHandler<CompleteMessage> = (c) => async ({
 
     await Promise.all(deletions);
   } catch (err) {
-    c.onError(err, { event });
+    await promisify(() => c.onError?.(err, { event }));
   }
 };

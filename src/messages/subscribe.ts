@@ -14,7 +14,7 @@ export const subscribe: MessageHandler<SubscribeMessage> = (c) => async ({
   message,
 }) => {
   try {
-    await promisify(() => c.onSubscribe({ event, message }));
+    await promisify(() => c.onSubscribe?.({ event, message }));
 
     // Check for variable errors
     const errors = validateMessage(c)(message);
@@ -34,8 +34,8 @@ export const subscribe: MessageHandler<SubscribeMessage> = (c) => async ({
     );
 
     if (!("operation" in execContext)) {
-      return sendMessage(c)({
-        connectionId: event.requestContext.connectionId!,
+      return sendMessage({
+        ...event.requestContext,
         message: {
           type: MessageType.Next,
           id: message.id,
@@ -59,7 +59,7 @@ export const subscribe: MessageHandler<SubscribeMessage> = (c) => async ({
     const topicDefinitions = (field.subscribe as SubscribeHandler)(root, args, context, info).definitions; // Access subscribe instance
     await Promise.all(
       topicDefinitions.map(async ({ topic, filter }) => {
-        const subscription = assign(new Subscription(), {
+        const subscription = assign(new c.model.Subscription(), {
           id: `${event.requestContext.connectionId}|${message.id}`,
           topic,
           filter: filter || {},
@@ -75,8 +75,8 @@ export const subscribe: MessageHandler<SubscribeMessage> = (c) => async ({
       })
     );
   } catch (err) {
-    c.onError(err, { event, message });
-    await deleteConnection(c)({ connectionId: event.requestContext.connectionId! });
+    await promisify(() => c.onError?.(err, { event, message }));
+    await deleteConnection(event.requestContext);
   }
 };
 

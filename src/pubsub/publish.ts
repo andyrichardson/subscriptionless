@@ -4,9 +4,9 @@ import {
   ConditionExpression,
 } from "@aws/dynamodb-expressions";
 import { parse, execute } from "graphql";
-import { MessageType } from 'graphql-ws';
-import { assign, GraphQLConnection, Subscription } from "../model";
-import { ServerArgs, ServerClosure } from "../types";
+import { MessageType } from "graphql-ws";
+import { assign, Subscription } from "../model";
+import { ServerClosure } from "../types";
 import { sendMessage } from "../utils";
 
 type PubSubEvent = {
@@ -14,14 +14,13 @@ type PubSubEvent = {
   payload: any;
 };
 
-export const publish = (
-  c: Omit<ServerClosure, "gateway"> & { gateway: ServerArgs["gateway"] }
-) => async (event: PubSubEvent) => {
+export const publish = (c: ServerClosure) => async (event: PubSubEvent) => {
   const subscriptions = await getFilteredSubs(c)(event);
   const iters = subscriptions.map(async (sub) => {
     const conn = await c.mapper.get(
-      assign(new GraphQLConnection(), { id: sub.connectionId })
+      assign(new c.model.Connection(), { id: sub.connectionId })
     );
+
     const result = execute(
       c.schema,
       parse(sub.subscription.query),
@@ -32,13 +31,8 @@ export const publish = (
       undefined
     );
 
-    const gateway =
-      typeof c.gateway === "function"
-        ? c.gateway({ requestContext: conn.requestContext } as any)
-        : c.gateway;
-        
-    sendMessage({ ...c, gateway })({
-      connectionId: conn.id,
+    sendMessage({
+      ...conn.requestContext,
       message: {
         id: sub.id,
         type: MessageType.Next,
@@ -54,7 +48,7 @@ const getFilteredSubs = (c: Omit<ServerClosure, "gateway">) => async (
 ): Promise<Subscription[]> => {
   const flattenPayload = flatten(event.payload);
   const iterator = c.mapper.query(
-    Subscription,
+    c.model.Subscription,
     {
       type: equals("subscription"),
       topic: equals(event.topic),

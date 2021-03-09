@@ -27,7 +27,7 @@ export const getResolverAndArgs = (c: Omit<ServerClosure, "gateway">) => (
   const fieldName = fieldNode.name.value;
   const fieldDef = getFieldDef(c.schema, type, fieldName);
   const path = addPath(undefined, responseName, type.name);
-  const info = buildResolveInfo(execContext, fieldDef, fieldNodes, type, path);
+  const info = buildResolveInfo(execContext, fieldDef!, fieldNodes, type, path);
 
   return [
     fieldDef,
