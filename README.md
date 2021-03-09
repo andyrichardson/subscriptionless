@@ -147,7 +147,6 @@ withFilter(subscribe("MY_TOPIC"), (root, args, context, info) => ({
 ```tsx
 import { concat, subscribe } from "subscriptionless/subscribe";
 
-// Query agnostic filter
 concat(subscribe("TOPIC_1"), subscribe("TOPIC_2"));
 ```
 
