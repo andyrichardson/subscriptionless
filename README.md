@@ -1,6 +1,6 @@
 ## About
 
-**WIP:** A library for using GraphQL subscriptions with AWS Lambda
+**WIP:** A library for using GraphQL subscriptions with AWS Lambda using the [graphql-ws protocol](https://github.com/enisdenjo/graphql-ws)
 
 ## Setup
 
