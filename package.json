@@ -20,9 +20,13 @@
     "dist",
     "tsconfig.json"
   ],
+  "browserslist": [
+    "node 12"
+  ],
   "scripts": {
-    "start": "microbundle --target node watch",
-    "build": "microbundle --target node"
+    "start": "microbundle --target node -f cjs watch",
+    "build": "microbundle --target node -f cjs",
+    "prepack": "rm -rf dist && npm run build"
   },
   "repository": {
     "type": "git",
