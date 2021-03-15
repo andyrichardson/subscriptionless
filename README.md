@@ -1,6 +1,10 @@
 ## About
 
-**WIP:** A library for using GraphQL subscriptions with AWS Lambda using the [graphql-ws protocol](https://github.com/enisdenjo/graphql-ws)
+GraphQL subscriptions for AWS Lambda and API Gateway Websockets.
+
+Have all the functionality of GraphQL subscriptions on a stateful server without the cost. 
+
+> Note: This project uses the [graphql-ws protocol](https://github.com/enisdenjo/graphql-ws) under the hood.
 
 ## Setup
 
