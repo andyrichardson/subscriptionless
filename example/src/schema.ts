@@ -30,7 +30,7 @@ export const resolvers = {
   },
   Subscription: {
     newArticles: {
-      resolve: (event, args) => event.payload,
+      resolve: (event, args) => [event.payload],
       subscribe: subscribe('NEW_ARTICLE'),
       onStart: () => console.log("START!"),
       onStop: () => console.log("STOP!"),

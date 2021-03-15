@@ -1,11 +1,11 @@
 ## Setup
 
-#### Create a server instance.
+#### Create a subscriptionless instance.
 
 ```ts
-import { createServer } from 'subscriptionless';
+import { createInstance } from 'subscriptionless';
 
-const server = createServer({
+const instance = createInstance({
   dynamodb,
   schema,
   gateway,
@@ -15,7 +15,7 @@ const server = createServer({
 #### Export the handler.
 
 ```ts
-export const handler = server.handler;
+export const handler = instance.handler;
 ```
 
 #### Configure API Gateway
@@ -42,7 +42,7 @@ functions:
 
 In-flight connections and subscriptions need to be persisted
 
-Here is a simple serverless framework example.
+Here is a serverless framework example.
 
 ```yaml
 resources:
@@ -51,7 +51,7 @@ resources:
     connectionsTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: connectionsTable
+        TableName: ${self:provider.environment.CONNECTIONS_TABLE}
         AttributeDefinitions:
           - AttributeName: id
             AttributeType: S
@@ -65,21 +65,41 @@ resources:
     subscriptionsTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: subscriptionsTable
+        TableName: ${self:provider.environment.SUBSCRIPTIONS_TABLE}
         AttributeDefinitions:
           - AttributeName: id
             AttributeType: S
           - AttributeName: topic
+            AttributeType: S
+          - AttributeName: connectionId
             AttributeType: S
         KeySchema:
           - AttributeName: id
             KeyType: HASH
           - AttributeName: topic
             KeyType: RANGE
+        GlobalSecondaryIndexes:
+          - IndexName: ConnectionIndex
+            KeySchema:
+              - AttributeName: connectionId
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+            ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
+          - IndexName: TopicIndex
+            KeySchema:
+              - AttributeName: topic
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+            ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
-        # TODO: Add GSI definitions for subscriptions
 
 ```
 
@@ -171,7 +191,7 @@ export const resolver = {
 Use the `publish` function to publish events to active subscriptions.
 
 ```tsx
-server.publish({
+instance.publish({
   type: "MY_TOPIC",
   payload: "HELLO",
 });
@@ -181,19 +201,19 @@ Events can come from many sources
 
 ```tsx
 // SNS Event
-export const SNSHandler = (event) =>
+export const snsHandler = (event) =>
   Promise.all(
     event.Records.map((r) =>
-      server.publish({
-        type: r.Sns.subject,
-        payload: r.Sns.message,
+      instance.publish({
+        topic: r.Sns.TopicArn.substring(r.Sns.TopicArn.lastIndexOf(":") + 1), // Get topic name (e.g. "MY_TOPIC")
+        payload: JSON.parse(r.Sns.Message),
       })
     )
   );
 
 // Manual Invocation
 export const invocationHandler = (payload) =>
-  server.publish({ type: "MY_TOPIC", payload });
+  instance.publish({ topic: "MY_TOPIC", payload });
 ```
 
 ## Client
@@ -205,7 +225,7 @@ export const invocationHandler = (payload) =>
 Called when a websocket connection is first established.
 
 ```ts
-const server = createServer({
+const instance = createInstance({
   /* ... */
   onConnect: ({ event }) => {/* */},
 });
@@ -216,7 +236,7 @@ const server = createServer({
 Called when a websocket connection is disconnected.
 
 ```ts
-const server = createServer({
+const instance = createInstance({
   /* ... */
   onDisconnect: ({ event }) => {/* */},
 });
@@ -229,7 +249,7 @@ const server = createServer({
 > **Note:** Any sensitive data in the incoming message should be removed at this stage.
 
 ```ts
-const server = createServer({
+const instance = createInstance({
   /* ... */
   onConnectionInit: ({ message }) => {
     const token = message.payload.token;
@@ -252,7 +272,7 @@ const server = createServer({
 Called when any subscription message is received.
 
 ```ts
-const server = createServer({
+const instance = createInstance({
   /* ... */
   onSubscribe: ({ event, message }) => {/* */},
 });
@@ -264,7 +284,7 @@ const server = createServer({
 Called when any complete message is received.
 
 ```ts
-const server = createServer({
+const instance = createInstance({
   /* ... */
   onComplete: ({ event, message }) => {/* */},
 });
@@ -275,7 +295,7 @@ const server = createServer({
 Called when any error is encountered
 
 ```ts
-const server = createServer({
+const instance = createInstance({
   /* ... */
   onError: (error, context) => {/* */},
 });

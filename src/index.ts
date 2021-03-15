@@ -5,7 +5,7 @@ import { handleWebSocket } from "./websocket";
 import { publish } from "./pubsub/publish";
 import { createModel, Connection, Subscription } from "./model";
 
-export const createServer = (opts: ServerArgs) => {
+export const createInstance = (opts: ServerArgs) => {
   const closure = {
     ...opts,
     model: {

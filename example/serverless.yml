@@ -22,7 +22,7 @@ provider:
 plugins:
   - serverless-plugin-typescript
 functions:
-  subscriptionless:
+  subscription:
     handler: src/handler.wsHandler
     events:
       - websocket:
@@ -31,6 +31,10 @@ functions:
           route: $disconnect
       - websocket:
           route: $default
+  snsEvent:
+    handler: src/handler.snsHandler
+    events:
+      - sns: NEW_ARTICLE
 resources:
   Resources:
     # Table for tracking connections
@@ -65,9 +69,18 @@ resources:
           - AttributeName: topic
             KeyType: RANGE
         GlobalSecondaryIndexes:
-          - IndexName: connectionIndex
+          - IndexName: ConnectionIndex
             KeySchema:
               - AttributeName: connectionId
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+            ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
+          - IndexName: TopicIndex
+            KeySchema:
+              - AttributeName: topic
                 KeyType: HASH
             Projection:
               ProjectionType: ALL
