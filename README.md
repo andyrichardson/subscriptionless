@@ -2,7 +2,7 @@
 
 GraphQL subscriptions for AWS Lambda and API Gateway Websockets.
 
-Have all the functionality of GraphQL subscriptions on a stateful server without the cost. 
+Have all the functionality of GraphQL subscriptions on a stateful server without the cost.
 
 > Note: This project uses the [graphql-ws protocol](https://github.com/enisdenjo/graphql-ws) under the hood.
 
@@ -11,7 +11,7 @@ Have all the functionality of GraphQL subscriptions on a stateful server without
 #### Create a subscriptionless instance.
 
 ```ts
-import { createInstance } from 'subscriptionless';
+import { createInstance } from "subscriptionless";
 
 const instance = createInstance({
   dynamodb,
@@ -29,7 +29,7 @@ export const handler = instance.handler;
 
 Set up API Gateway to route websocket events to the exported handler.
 
-Here is a simple serverless framework example.
+_Serverless framework example._
 
 ```yaml
 functions:
@@ -51,7 +51,7 @@ In-flight connections and subscriptions need to be persisted
 
 <details>
   
-<summary>Here is a serverless framework example.</summary>
+<summary>💾 serverless framework example</summary>
 
 ```yaml
 resources:
@@ -109,18 +109,84 @@ resources:
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
-
 ```
 
 </details>
 
-## Schema
+<details>
+  
+<summary>💾 terraform example</summary>
+
+```tf
+resource "aws_dynamodb_table" "connections-table" {
+  name           = "subscriptionless_connections"
+  billing_mode   = "PROVISIONED"
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key = "id"
+
+  attribute {
+    name = "id"
+    type = "S"
+  }
+}
+
+resource "aws_dynamodb_table" "subscriptions-table" {
+  name           = "subscriptionless_subscriptions"
+  billing_mode   = "PROVISIONED"
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key = "id"
+  range_key = "topic"
+
+  attribute {
+    name = "id"
+    type = "S"
+  }
+
+  attribute {
+    name = "topic"
+    type = "S"
+  }
+
+  attribute {
+    name = "connectionId"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name               = "ConnectionIndex"
+    hash_key           = "connectionId"
+    write_capacity     = 1
+    read_capacity      = 1
+    projection_type    = "ALL"
+  }
+
+  global_secondary_index {
+    name               = "TopicIndex"
+    hash_key           = "topic"
+    write_capacity     = 1
+    read_capacity      = 1
+    projection_type    = "ALL"
+  }
+}
+```
+
+</details>
+
+## Usage
 
 ### PubSub
 
-#### Subscribing to events
+`subscriptionless` uses it's own _PubSub_ implementation which loosely implements the [Apollo PubSub Interface](https://github.com/apollographql/graphql-subscriptions#pubsub-implementations).
 
-Subscribing to messages is similar to the `PubSub` library.
+> Note: Unlike the Apollo `PubSub` library, this implementation is (mostly) stateless
+
+<details>
+  
+<summary>📖 Subscribing to topics</summary>
+
+Use the `subscribe` function to associate incoming subscriptions with a topic.
 
 ```ts
 import { subscribe } from 'subscriptionless/subscribe';
@@ -135,9 +201,15 @@ export const resolver = {
 }
 ```
 
-#### Filtering events
+</details>
 
-The filter object/function must always resolve to a serializable object.
+<details>
+  
+<summary>📖 Filtering events</summary>
+
+Wrap any `subscribe` function call in a `withFilter` to provide filter conditions.
+
+> Note: If a function is provided, it will be called **on subscription start** and must return a serializable object.
 
 ```ts
 import { withFilter, subscribe } from "subscriptionless/subscribe";
@@ -156,7 +228,13 @@ withFilter(subscribe("MY_TOPIC"), (root, args, context, info) => ({
 }));
 ```
 
-#### Concatenating subscriptions
+</details>
+
+<details>
+  
+<summary>📖 Concatenating topic subscriptions</summary>
+
+Join multiple topic subscriptions together using `concat`.
 
 ```tsx
 import { concat, subscribe } from "subscriptionless/subscribe";
@@ -164,41 +242,13 @@ import { concat, subscribe } from "subscriptionless/subscribe";
 concat(subscribe("TOPIC_1"), subscribe("TOPIC_2"));
 ```
 
-### Subscription side-effects
+</details>
 
-Event handlers for subscription start/stop can be provided.
+<details>
+  
+<summary>📖 Publishing events</summary>
 
-#### Enabling side effects
-
-For `onStart` and `onStop` side effects to work, resolvers must be passed to `prepareResolvers`
-
-```ts
-import { prepareResolvers } from "subscriptionless/subscribe";
-
-const schema = makeExecutableSchema({
-  typedefs,
-  resolvers: prepareResolvers(resolvers),
-});
-```
-
-#### Adding handlers
-
-```ts
-export const resolver = {
-  Subscribe: {
-    mySubscription: {
-      resolve: (event, args, context) => {/* ... */}
-      subscribe: subscribe('MY_TOPIC'),
-      onStart: (root, args) => {/* ... */},
-      onStop: (root, args) => {/* ... */}
-    }
-  }
-}
-```
-
-## Publishing events
-
-Use the `publish` function to publish events to active subscriptions.
+Use the `publish` on your subscriptionless instance to publish events to active subscriptions.
 
 ```tsx
 instance.publish({
@@ -226,33 +276,95 @@ export const invocationHandler = (payload) =>
   instance.publish({ topic: "MY_TOPIC", payload });
 ```
 
-## Client
+</details>
+
+### Side effects
+
+Side effect handlers can be declared on subscription fields to handle `onSubscribe` (start) and `onComplete` (stop) events.
+
+<details>
+  
+<summary>📖 Enabling side effects</summary>
+
+For `onSubscribe` and `onComplete` side effects to work, resolvers must first be passed to `prepareResolvers` prior to schema construction.
+
+```ts
+import { prepareResolvers } from "subscriptionless/subscribe";
+
+const schema = makeExecutableSchema({
+  typedefs,
+  resolvers: prepareResolvers(resolvers),
+});
+```
+
+</details>
+
+<details>
+  
+<summary>📖 Adding side-effect handlers</summary>
+
+```ts
+export const resolver = {
+  Subscribe: {
+    mySubscription: {
+      resolve: (event, args, context) => {
+        /* ... */
+      },
+      subscribe: subscribe("MY_TOPIC"),
+      onSubscribe: (root, args) => {
+        /* Do something on subscription start */
+      },
+      onComplete: (root, args) => {
+        /* Do something on subscription stop */
+      },
+    },
+  },
+};
+```
+
+</details>
 
 ### Events
 
-#### Connect (onConnect)
+Global events can be provided when calling `createInstance` to track the execution cycle of the lambda.
+
+<details>
+  
+<summary>📖 Connect (onConnect)</summary>
 
 Called when a websocket connection is first established.
 
 ```ts
 const instance = createInstance({
   /* ... */
-  onConnect: ({ event }) => {/* */},
+  onConnect: ({ event }) => {
+    /* */
+  },
 });
 ```
 
-#### Disconnect (onDisconnect)
+</details>
+
+<details>
+  
+<summary>📖 Disconnect (onDisconnect)</summary>
 
 Called when a websocket connection is disconnected.
 
 ```ts
 const instance = createInstance({
   /* ... */
-  onDisconnect: ({ event }) => {/* */},
+  onDisconnect: ({ event }) => {
+    /* */
+  },
 });
 ```
 
-#### Authorization (connection_init)
+</details>
+
+<details>
+  
+<summary>📖 Authorization (connection_init)</summary>
 
 `onConnectionInit` can be used to verify the `connection_init` payload prior to persistence.
 
@@ -277,6 +389,12 @@ const instance = createInstance({
 });
 ```
 
+</details>
+
+<details>
+  
+<summary>📖 Subscribe (onSubscribe)</summary>
+
 #### Subscribe (onSubscribe)
 
 Called when any subscription message is received.
@@ -284,29 +402,44 @@ Called when any subscription message is received.
 ```ts
 const instance = createInstance({
   /* ... */
-  onSubscribe: ({ event, message }) => {/* */},
+  onSubscribe: ({ event, message }) => {
+    /* */
+  },
 });
 ```
 
+</details>
 
-#### Complete (onComplete)
+<details>
+  
+<summary>📖 Complete (onComplete)</summary>
 
 Called when any complete message is received.
 
 ```ts
 const instance = createInstance({
   /* ... */
-  onComplete: ({ event, message }) => {/* */},
+  onComplete: ({ event, message }) => {
+    /* */
+  },
 });
 ```
 
-#### Error (onError)
+</details>
+
+<details>
+  
+<summary>📖 Error (onError)</summary>
 
 Called when any error is encountered
 
 ```ts
 const instance = createInstance({
   /* ... */
-  onError: (error, context) => {/* */},
+  onError: (error, context) => {
+    /* */
+  },
 });
 ```
+
+</details>
