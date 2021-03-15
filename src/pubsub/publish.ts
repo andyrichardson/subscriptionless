@@ -49,10 +49,7 @@ const getFilteredSubs = (c: Omit<ServerClosure, "gateway">) => async (
   const flattenPayload = flatten(event.payload);
   const iterator = c.mapper.query(
     c.model.Subscription,
-    {
-      type: equals("subscription"),
-      topic: equals(event.topic),
-    },
+    { topic: equals(event.topic) },
     {
       filter: {
         type: "And",

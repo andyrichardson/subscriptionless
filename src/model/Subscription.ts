@@ -1,28 +1,36 @@
-import { attribute, hashKey, rangeKey } from '@aws/dynamodb-data-mapper-annotations';
-import { APIGatewayEventRequestContext } from 'aws-lambda';
+import {
+  attribute,
+  hashKey,
+  rangeKey,
+} from "@aws/dynamodb-data-mapper-annotations";
+import { APIGatewayEventRequestContext } from "aws-lambda";
 
 /**
  * Active subscriptions
  */
 export class Subscription {
   /*
-   * connectionId|subscriptionId|topic
+   * connectionId|subscriptionId
    */
-  @hashKey({ type: 'String' })
+  @hashKey({ type: "String" })
   id: string;
 
   @rangeKey({
-    type: 'String',
+    type: "String",
+    indexKeyConfigurations: { TopicIndex: "HASH" },
   })
   topic: string;
 
   @attribute()
   filter: object;
 
-  @attribute({ type: 'String', indexKeyConfigurations: { 'connectionIndex': 'HASH' } })
+  @attribute({
+    type: "String",
+    indexKeyConfigurations: { ConnectionIndex: "HASH" },
+  })
   connectionId: string;
 
-  @attribute({ type: 'String' })
+  @attribute({ type: "String" })
   subscriptionId: string;
 
   @attribute({ defaultProvider: () => new Date() })

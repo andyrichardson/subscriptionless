@@ -19,7 +19,7 @@ export const disconnect: MessageHandler<null> = (c) => async ({ event }) => {
       {
         connectionId: equals(event.requestContext.connectionId),
       },
-      { indexName: "connectionIndex" }
+      { indexName: "ConnectionIndex" }
     );
 
     let deletions = [] as Promise<any>[];
