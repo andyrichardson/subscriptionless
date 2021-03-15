@@ -2,7 +2,7 @@
 
 GraphQL subscriptions for AWS Lambda and API Gateway Websockets.
 
-Have all the functionality of GraphQL subscriptions on a stateful server without the cost. 
+Have all the functionality of GraphQL subscriptions on a stateful server without the cost.
 
 > Note: This project uses the [graphql-ws protocol](https://github.com/enisdenjo/graphql-ws) under the hood.
 
@@ -11,7 +11,7 @@ Have all the functionality of GraphQL subscriptions on a stateful server without
 #### Create a subscriptionless instance.
 
 ```ts
-import { createInstance } from 'subscriptionless';
+import { createInstance } from "subscriptionless";
 
 const instance = createInstance({
   dynamodb,
@@ -29,7 +29,9 @@ export const handler = instance.handler;
 
 Set up API Gateway to route websocket events to the exported handler.
 
-Here is a simple serverless framework example.
+<details>
+
+<summary>💾 serverless framework example</summary>
 
 ```yaml
 functions:
@@ -45,13 +47,15 @@ functions:
           route: $default
 ```
 
+</details>
+
 #### Create DynanmoDB tables for state
 
 In-flight connections and subscriptions need to be persisted
 
 <details>
   
-<summary>Here is a serverless framework example.</summary>
+<summary>💾 serverless framework example</summary>
 
 ```yaml
 resources:
@@ -109,7 +113,67 @@ resources:
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
+```
 
+</details>
+
+<details>
+  
+<summary>💾 terraform example</summary>
+
+```tf
+resource "aws_dynamodb_table" "connections-table" {
+  name           = "subscriptionless_connections"
+  billing_mode   = "PROVISIONED"
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key = "id"
+
+  attribute {
+    name = "id"
+    type = "S"
+  }
+}
+
+resource "aws_dynamodb_table" "subscriptions-table" {
+  name           = "subscriptionless_subscriptions"
+  billing_mode   = "PROVISIONED"
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key = "id"
+  range_key = "topic"
+
+  attribute {
+    name = "id"
+    type = "S"
+  }
+
+  attribute {
+    name = "topic"
+    type = "S"
+  }
+
+  attribute {
+    name = "connectionId"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name               = "ConnectionIndex"
+    hash_key           = "connectionId"
+    write_capacity     = 1
+    read_capacity      = 1
+    projection_type    = "ALL"
+  }
+
+  global_secondary_index {
+    name               = "TopicIndex"
+    hash_key           = "topic"
+    write_capacity     = 1
+    read_capacity      = 1
+    projection_type    = "ALL"
+  }
+}
 ```
 
 </details>
@@ -237,7 +301,9 @@ Called when a websocket connection is first established.
 ```ts
 const instance = createInstance({
   /* ... */
-  onConnect: ({ event }) => {/* */},
+  onConnect: ({ event }) => {
+    /* */
+  },
 });
 ```
 
@@ -248,7 +314,9 @@ Called when a websocket connection is disconnected.
 ```ts
 const instance = createInstance({
   /* ... */
-  onDisconnect: ({ event }) => {/* */},
+  onDisconnect: ({ event }) => {
+    /* */
+  },
 });
 ```
 
@@ -284,10 +352,11 @@ Called when any subscription message is received.
 ```ts
 const instance = createInstance({
   /* ... */
-  onSubscribe: ({ event, message }) => {/* */},
+  onSubscribe: ({ event, message }) => {
+    /* */
+  },
 });
 ```
-
 
 #### Complete (onComplete)
 
@@ -296,7 +365,9 @@ Called when any complete message is received.
 ```ts
 const instance = createInstance({
   /* ... */
-  onComplete: ({ event, message }) => {/* */},
+  onComplete: ({ event, message }) => {
+    /* */
+  },
 });
 ```
 
@@ -307,6 +378,8 @@ Called when any error is encountered
 ```ts
 const instance = createInstance({
   /* ... */
-  onError: (error, context) => {/* */},
+  onError: (error, context) => {
+    /* */
+  },
 });
 ```
