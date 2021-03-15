@@ -1,6 +1,6 @@
 {
   "name": "subscriptionless",
-  "version": "1.0.0-alpha.0",
+  "version": "1.0.0-alpha.1",
   "description": "GraphQL subscriptions using AWS Lambda and API Gateway Websockets",
   "source": "src/index.ts",
   "main": "dist/index.js",

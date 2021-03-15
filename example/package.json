@@ -18,6 +18,6 @@
     "aws-sdk": "^2.859.0",
     "graphql": "^15.5.0",
     "graphql-tag": "^2.11.0",
-    "subscriptionless": "1.0.0-alpha.0"
+    "subscriptionless": "1.0.0-alpha.1"
   }
 }
