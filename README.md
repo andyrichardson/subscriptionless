@@ -145,7 +145,6 @@ resource "aws_dynamodb_table" "subscriptions-table" {
     name = "id"
     type = "S"
   }
-<<<<<<< HEAD
 
   attribute {
     name = "topic"
@@ -165,27 +164,6 @@ resource "aws_dynamodb_table" "subscriptions-table" {
     projection_type    = "ALL"
   }
 
-=======
-
-  attribute {
-    name = "topic"
-    type = "S"
-  }
-
-  attribute {
-    name = "connectionId"
-    type = "S"
-  }
-
-  global_secondary_index {
-    name               = "ConnectionIndex"
-    hash_key           = "connectionId"
-    write_capacity     = 1
-    read_capacity      = 1
-    projection_type    = "ALL"
-  }
-
->>>>>>> 49424406de943b288cf41694e7df03b06984fd55
   global_secondary_index {
     name               = "TopicIndex"
     hash_key           = "topic"
@@ -432,15 +410,11 @@ const instance = createInstance({
 });
 ```
 
-<<<<<<< HEAD
 </details>
 
 <details>
   
 <summary>📖 Complete (onComplete)</summary>
-=======
-#### Complete (onComplete)
->>>>>>> 49424406de943b288cf41694e7df03b06984fd55
 
 Called when any complete message is received.
 
