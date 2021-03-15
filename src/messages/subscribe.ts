@@ -50,10 +50,10 @@ export const subscribe: MessageHandler<SubscribeMessage> = (c) => async ({
       execContext
     );
 
-    // Dispatch onStart side effect
-    const onStart = field.resolve.onStart;
-    if (onStart) {
-      await onStart(root, args, context, info);
+    // Dispatch onSubscribe side effect
+    const onSubscribe = field.resolve.onSubscribe;
+    if (onSubscribe) {
+      await onSubscribe(root, args, context, info);
     }
 
     const topicDefinitions = (field.subscribe as SubscribeHandler)(root, args, context, info).definitions; // Access subscribe instance

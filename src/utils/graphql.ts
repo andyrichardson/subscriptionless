@@ -45,7 +45,7 @@ const prepareResolver = <T extends object>(r: T) => {
     }
 
     // Add event handlers to resolver fn so they can be accessed later
-    ["onStart", "onStop"].forEach((key) => (node.resolve[key] = node[key]));
+    ["onSubscribe", "onComplete"].forEach((key) => (node.resolve[key] = node[key]));
     return false;
   });
   return r;
