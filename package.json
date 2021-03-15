@@ -1,13 +1,24 @@
 {
   "name": "subscriptionless",
-  "version": "0.0.1",
-  "description": "",
+  "version": "1.0.0-alpha.0",
+  "description": "GraphQL subscriptions using AWS Lambda and API Gateway Websockets",
   "source": "src/index.ts",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "sideEffects": false,
+  "keywords": [
+    "graphql",
+    "subscription",
+    "lambda",
+    "API Gateway",
+    "serverless",
+    "AWS"
+  ],
   "files": [
     "LICENSE",
     "README.md",
-    "dist"
+    "dist",
+    "tsconfig.json"
   ],
   "scripts": {
     "start": "microbundle --target node watch",
