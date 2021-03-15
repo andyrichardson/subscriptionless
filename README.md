@@ -1,3 +1,7 @@
+## About
+
+**WIP:** A library for using GraphQL subscriptions with AWS Lambda using the [graphql-ws protocol](https://github.com/enisdenjo/graphql-ws)
+
 ## Setup
 
 #### Create a subscriptionless instance.
@@ -8,7 +12,6 @@ import { createInstance } from 'subscriptionless';
 const instance = createInstance({
   dynamodb,
   schema,
-  gateway,
 });
 ```
 
@@ -42,7 +45,9 @@ functions:
 
 In-flight connections and subscriptions need to be persisted
 
-Here is a serverless framework example.
+<details>
+  
+<summary>Here is a serverless framework example.</summary>
 
 ```yaml
 resources:
@@ -103,6 +108,8 @@ resources:
 
 ```
 
+</details>
+
 ## Schema
 
 ### PubSub
@@ -131,7 +138,7 @@ The filter object/function must always resolve to a serializable object.
 ```ts
 import { withFilter, subscribe } from "subscriptionless/subscribe";
 
-// Query agnostic filter
+// Subscription agnostic filter
 withFilter(subscribe("MY_TOPIC"), {
   attr1: "`attr1` must have this value",
   attr2: {
@@ -139,7 +146,7 @@ withFilter(subscribe("MY_TOPIC"), {
   },
 });
 
-// Query agnostic filter
+// Subscription specific filter
 withFilter(subscribe("MY_TOPIC"), (root, args, context, info) => ({
   userId: args.userId,
 }));
@@ -150,7 +157,6 @@ withFilter(subscribe("MY_TOPIC"), (root, args, context, info) => ({
 ```tsx
 import { concat, subscribe } from "subscriptionless/subscribe";
 
-// Query agnostic filter
 concat(subscribe("TOPIC_1"), subscribe("TOPIC_2"));
 ```
 
