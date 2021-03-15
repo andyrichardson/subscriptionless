@@ -12,21 +12,13 @@ const instance = createInstance({
   dynamodb: new DynamoDB({
     logger: console,
   }),
-  schema,
   tableNames: {
     connections: process.env.CONNECTIONS_TABLE,
     subscriptions: process.env.SUBSCRIPTIONS_TABLE,
   },
-  onSubscribe: (...args) => {
-    console.log("SUBSCRIBE");
-    console.log(JSON.stringify(args, null, 2));
-  },
-  onConnect: () => console.log("CONNECT"),
-  onConnectionInit: () => {
-    console.log("CONNECTION INIT");
-    return {};
-  },
-  onError: console.log,
+  schema,
+  onConnectionInit: () => ({}),
+  onError: console.error,
 });
 
 export const wsHandler = instance.handler;
