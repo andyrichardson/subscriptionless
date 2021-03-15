@@ -1,10 +1,46 @@
 ## About
 
-GraphQL subscriptions for AWS Lambda and API Gateway Websockets.
+GraphQL subscriptions for AWS Lambda and API Gateway WebSockets.
 
 Have all the functionality of GraphQL subscriptions on a stateful server without the cost.
 
 > Note: This project uses the [graphql-ws protocol](https://github.com/enisdenjo/graphql-ws) under the hood.
+
+## ⚠️ Limitations
+
+Seriously, **read this first** before you even think about using this.
+
+<details>
+  
+<summary>This is in alpha</summary>
+
+This is Alpha software and should be treated as such.
+
+</details>
+
+<details>
+  
+<summary>AWS API Gateway Limitations</summary>
+
+There are a few noteworthy limitations to the AWS API Gateway WebSocket implementation.
+
+> Note: If you work on AWS and want to run through this, hit me up!
+
+#### Ping/Pong
+
+For whatever reason, AWS API Gateway does not support WebSocket protocol level ping/pong.
+
+This means early detection of unclean client disconnects is near impossible [(graphql-ws will not implement subprotocol level ping/pong)](https://github.com/enisdenjo/graphql-ws/issues/117).
+
+#### Socket idleness
+
+API Gateway considers an idle connection to be one where no messages have been sent on the socket for a fixed duration [(currently 10 minutes)](https://docs.aws.amazon.com/apigateway/latest/developerguide/limits.html#apigateway-execution-service-websocket-limits-table).
+
+Again, the WebSocket spec has support for detecting idle connections (ping/pong) but API Gateway doesn't use it. This means, in the case where both parties are connected, and no message is sent on the socket for the defined duration (direction agnostic), API Gateway will close the socket.
+
+A quick fix for this is to set up immediate reconnection on the client side.
+
+</details>
 
 ## Setup
 
@@ -27,7 +63,7 @@ export const handler = instance.handler;
 
 #### Configure API Gateway
 
-Set up API Gateway to route websocket events to the exported handler.
+Set up API Gateway to route WebSocket events to the exported handler.
 
 _Serverless framework example._
 
@@ -334,7 +370,7 @@ Global events can be provided when calling `createInstance` to track the executi
   
 <summary>📖 Connect (onConnect)</summary>
 
-Called when a websocket connection is first established.
+Called when a WebSocket connection is first established.
 
 ```ts
 const instance = createInstance({
@@ -351,7 +387,7 @@ const instance = createInstance({
   
 <summary>📖 Disconnect (onDisconnect)</summary>
 
-Called when a websocket connection is disconnected.
+Called when a WebSocket connection is disconnected.
 
 ```ts
 const instance = createInstance({
