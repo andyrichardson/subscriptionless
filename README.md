@@ -40,6 +40,12 @@ Again, the WebSocket spec has support for detecting idle connections (ping/pong)
 
 A quick fix for this is to set up immediate reconnection on the client side.
 
+#### Socket errors
+
+API Gateway's current socket closing functionality doesn't support any kind of message/payload. Along with this, [graphql-ws won't support error messages](https://github.com/enisdenjo/graphql-ws/issues/112).
+
+Because of this limitation, there is no clear way to communicate subprotocol errors to the client. In the case of a subprotocol error the socket will be closed by the server (with no meaningful disconnect payload).
+
 </details>
 
 ## Setup
