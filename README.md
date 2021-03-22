@@ -85,7 +85,25 @@ functions:
 
 #### Create DynanmoDB tables for state
 
-In-flight connections and subscriptions need to be persisted
+In-flight connections and subscriptions need to be persisted.
+
+<details>
+  
+<summary>📖  Changing DynamoDB table names</summary>
+
+Use the `tableNames` argument to override the default table names.
+
+```ts
+const instance = createInstance({
+  /* ... */
+  tableNames: {
+    connections: "my_connections",
+    subscriptions: "my_subscriptions",
+  },
+});
+```
+
+</details>
 
 <details>
   
@@ -212,6 +230,7 @@ resource "aws_dynamodb_table" "subscriptions-table" {
 
 </details>
 
+
 ## Usage
 
 ### PubSub
@@ -312,6 +331,71 @@ export const snsHandler = (event) =>
 // Manual Invocation
 export const invocationHandler = (payload) =>
   instance.publish({ topic: "MY_TOPIC", payload });
+```
+
+</details>
+
+### Context
+
+Context values are accessible in all resolver level functions (`resolve`, `subscribe`, `onSubscribe` and `onComplete`).
+
+<details>
+  
+<summary>📖 Default value</summary>
+
+Assuming no `context` argument is provided, the default value is an object containing a `connectionParams` attribute.
+
+This attribute contains the [(optionally parsed)](#events) payload from `connection_init`.
+
+```ts
+export const resolver = {
+  Subscribe: {
+    mySubscription: {
+      resolve: (event, args, context) => {
+        console.log(context.connectionParams); // payload from connection_init
+      },
+    },
+  },
+};
+```
+
+</details>
+
+<details>
+  
+<summary>📖 Setting static context value</summary>
+
+An object can be provided via the `context` attribute when calling `createInstance`.
+
+```ts
+const instance = createInstance({
+  /* ... */
+  context: {
+    myAttr: "hello",
+  },
+});
+```
+
+The default values (above) will be appended to this object prior to execution.
+
+</details>
+
+<details>
+  
+<summary>📖 Setting dynamic context value</summary>
+
+A function (optionally async) can be provided via the `context` attribute when calling `createInstance`.
+
+The default context value is passed as an argument.
+
+```ts
+const instance = createInstance({
+  /* ... */
+  context: ({ connectionParams }) => ({
+    myAttr: "hello",
+    user: connectionParams.user,
+  }),
+});
 ```
 
 </details>
@@ -426,6 +510,8 @@ const instance = createInstance({
   },
 });
 ```
+
+By default, the (optionally parsed) payload will be accessible via [context](#context).
 
 </details>
 

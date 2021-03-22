@@ -7,7 +7,7 @@ import { parse, execute } from "graphql";
 import { MessageType } from "graphql-ws";
 import { assign, Subscription } from "../model";
 import { ServerClosure } from "../types";
-import { sendMessage } from "../utils";
+import { constructContext, sendMessage } from "../utils";
 
 type PubSubEvent = {
   topic: string;
@@ -17,22 +17,18 @@ type PubSubEvent = {
 export const publish = (c: ServerClosure) => async (event: PubSubEvent) => {
   const subscriptions = await getFilteredSubs(c)(event);
   const iters = subscriptions.map(async (sub) => {
-    const conn = await c.mapper.get(
-      assign(new c.model.Connection(), { id: sub.connectionId })
-    );
-
     const result = execute(
       c.schema,
       parse(sub.subscription.query),
       event,
-      {}, // TODO: context
+      await constructContext(c)(sub),
       sub.subscription.variables,
       sub.subscription.operationName,
       undefined
     );
 
-    sendMessage({
-      ...conn.requestContext,
+    await sendMessage({
+      ...sub.requestContext,
       message: {
         id: sub.id,
         type: MessageType.Next,

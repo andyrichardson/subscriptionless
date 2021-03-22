@@ -8,6 +8,7 @@ import { Subscription, Connection } from './model';
 export type ServerArgs = {
   schema: GraphQLSchema;
   dynamodb: DynamoDB;
+  context?: ((arg: { connectionParams: any }) => object) | object;
   tableNames?: Partial<TableNames>;
   onConnect?: (e: { event: APIGatewayEvent }) => MaybePromise<void>;
   onDisconnect?: (e: { event: APIGatewayEvent }) => MaybePromise<void>;

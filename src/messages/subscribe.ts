@@ -5,8 +5,8 @@ import {
   assertValidExecutionArguments,
 } from "graphql/execution/execute";
 import { MessageHandler } from "./types";
-import { deleteConnection, getResolverAndArgs, promisify, sendMessage } from "../utils";
-import { assign, Subscription } from "../model";
+import { constructContext, deleteConnection, getResolverAndArgs, promisify, sendMessage } from "../utils";
+import { assign } from "../model";
 import { ServerClosure, SubscribeHandler } from "../types";
 
 export const subscribe: MessageHandler<SubscribeMessage> = (c) => async ({
@@ -14,7 +14,13 @@ export const subscribe: MessageHandler<SubscribeMessage> = (c) => async ({
   message,
 }) => {
   try {
-    await promisify(() => c.onSubscribe?.({ event, message }));
+    const [connection] = await Promise.all([
+      await c.mapper.get(
+        assign(new c.model.Connection(), { id: event.requestContext.connectionId! })
+      ),
+      await promisify(() => c.onSubscribe?.({ event, message }))
+    ]);
+    const connectionParams = connection.payload || {};
 
     // Check for variable errors
     const errors = validateMessage(c)(message);
@@ -27,7 +33,7 @@ export const subscribe: MessageHandler<SubscribeMessage> = (c) => async ({
       c.schema,
       parse(message.payload.query),
       undefined,
-      {}, // Context
+      await constructContext(c)({ connectionParams }),
       message.payload.variables,
       message.payload.operationName,
       undefined
@@ -69,6 +75,7 @@ export const subscribe: MessageHandler<SubscribeMessage> = (c) => async ({
             ...message.payload,
           },
           connectionId: event.requestContext.connectionId!,
+          connectionParams,
           requestContext: event.requestContext,
         });
         await c.mapper.put(subscription);

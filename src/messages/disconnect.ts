@@ -1,7 +1,7 @@
 import { parse } from "graphql";
 import { equals } from "@aws/dynamodb-expressions";
 import { buildExecutionContext } from "graphql/execution/execute";
-import { getResolverAndArgs, promisify } from "../utils";
+import { constructContext, getResolverAndArgs, promisify } from "../utils";
 import { MessageHandler } from "./types";
 import { assign } from "../model";
 
@@ -9,11 +9,6 @@ export const disconnect: MessageHandler<null> = (c) => async ({ event }) => {
   try {
     await promisify(() => c.onDisconnect?.({ event }));
 
-    const connection = await c.mapper.get(
-      assign(new c.model.Connection(), {
-        id: event.requestContext.connectionId!,
-      })
-    );
     const entities = await c.mapper.query(
       c.model.Subscription,
       {
@@ -36,20 +31,20 @@ export const disconnect: MessageHandler<null> = (c) => async ({ event }) => {
               c.schema,
               parse(entity.subscription.query),
               undefined,
-              {}, // Context
+              await constructContext(c)(entity),
               entity.subscription.variables,
               entity.subscription.operationName,
               undefined
             );
-  
+
             if (!("operation" in execContext)) {
               throw execContext;
             }
-  
+
             const [field, root, args, context, info] = getResolverAndArgs(c)(
               execContext
             );
-  
+
             const onComplete = field.resolve.onComplete;
             if (onComplete) {
               await onComplete(root, args, context, info);
@@ -61,7 +56,16 @@ export const disconnect: MessageHandler<null> = (c) => async ({ event }) => {
       ];
     }
 
-    await Promise.all([...deletions, c.mapper.delete(connection)]);
+    await Promise.all([
+      // Delete subscriptions
+      ...deletions,
+      // Delete connection
+      c.mapper.delete(
+        assign(new c.model.Connection(), {
+          id: event.requestContext.connectionId!,
+        })
+      ),
+    ]);
   } catch (err) {
     await promisify(() => c.onError?.(err, { event }));
   }

@@ -36,6 +36,10 @@ export class Subscription {
   @attribute({ defaultProvider: () => new Date() })
   createdAt: Date;
 
+  /** Redundant copy of connection_init payload */
+  @attribute()
+  connectionParams: object;
+
   @attribute()
   requestContext: APIGatewayEventRequestContext;
 

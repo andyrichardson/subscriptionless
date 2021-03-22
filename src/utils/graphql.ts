@@ -8,6 +8,15 @@ import {
 import { addPath } from "graphql/jsutils/Path";
 import { ServerClosure } from "../types";
 
+export const constructContext = (c: ServerClosure) => ({
+  connectionParams,
+}: {
+  connectionParams: object;
+}) =>
+  typeof c.context === "function"
+    ? c.context({ connectionParams })
+    : { ...c.context, connectionParams };
+
 export const getResolverAndArgs = (c: Omit<ServerClosure, "gateway">) => (
   execContext: ExecutionContext
 ) => {
@@ -45,14 +54,16 @@ const prepareResolver = <T extends object>(r: T) => {
     }
 
     // Add event handlers to resolver fn so they can be accessed later
-    ["onSubscribe", "onComplete"].forEach((key) => (node.resolve[key] = node[key]));
+    ["onSubscribe", "onComplete"].forEach(
+      (key) => (node.resolve[key] = node[key])
+    );
     return false;
   });
   return r;
 };
 
 export const prepareResolvers = <T extends object | object[]>(arg: T) =>
-  Array.isArray(arg) ? arg.map(prepareResolver) as T[] : prepareResolver(arg);
+  Array.isArray(arg) ? (arg.map(prepareResolver) as T[]) : prepareResolver(arg);
 
 const visit = <T = object>(node: T, handler: (node: T) => any) =>
   Object.values(node).forEach((value) => {

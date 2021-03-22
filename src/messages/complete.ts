@@ -1,7 +1,7 @@
 import { parse } from "graphql";
 import { CompleteMessage } from "graphql-ws";
 import { buildExecutionContext } from "graphql/execution/execute";
-import { deleteConnection, getResolverAndArgs, promisify } from "../utils";
+import { constructContext, deleteConnection, getResolverAndArgs, promisify } from "../utils";
 import { MessageHandler } from "./types";
 
 export const complete: MessageHandler<CompleteMessage> = (c) => async ({
@@ -27,7 +27,7 @@ export const complete: MessageHandler<CompleteMessage> = (c) => async ({
               c.schema,
               parse(entity.subscription.query),
               undefined,
-              {}, // Context
+              await constructContext(c)(entity),
               entity.subscription.variables,
               entity.subscription.operationName,
               undefined
