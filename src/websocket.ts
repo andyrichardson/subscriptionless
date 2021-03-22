@@ -5,7 +5,7 @@ import { complete, connection_init, subscribe, disconnect } from './messages';
 
 export const handleWebSocket = (
   c: ServerClosure
-): Handler<APIGatewayEvent, WebsocketResponse> => async (event, context) => {
+): Handler<APIGatewayEvent, WebsocketResponse> => async (event) => {
   if (!event.requestContext) {
     return {
       statusCode: 200,
