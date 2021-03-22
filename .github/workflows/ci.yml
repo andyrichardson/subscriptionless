@@ -1,0 +1,12 @@
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    container: 'node:14'
+    steps:
+      - run: npm ci
+  build:
+    runs-on: ubuntu-latest
+    container: 'node:14'
+    steps:
+      - run: npm run build
+    needs: install
