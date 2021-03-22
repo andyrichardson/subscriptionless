@@ -1,9 +1,9 @@
-import { DataMapper } from "@aws/dynamodb-data-mapper";
-import { Handler } from "aws-lambda";
-import { ServerArgs } from "./types";
-import { handleWebSocket } from "./websocket";
-import { publish } from "./pubsub/publish";
-import { createModel, Connection, Subscription } from "./model";
+import { DataMapper } from '@aws/dynamodb-data-mapper';
+import { Handler } from 'aws-lambda';
+import { ServerArgs } from './types';
+import { handleWebSocket } from './websocket';
+import { publish } from './pubsub/publish';
+import { createModel, Connection, Subscription } from './model';
 
 export const createInstance = (opts: ServerArgs) => {
   const closure = {
@@ -12,18 +12,17 @@ export const createInstance = (opts: ServerArgs) => {
       Subscription: createModel({
         model: Subscription,
         table:
-          opts.tableNames?.subscriptions || "subscriptionless_subscriptions",
+          opts.tableNames?.subscriptions || 'subscriptionless_subscriptions',
       }),
       Connection: createModel({
         model: Connection,
-        table: opts.tableNames?.connections || "subscriptionless_connections",
+        table: opts.tableNames?.connections || 'subscriptionless_connections',
       }),
     },
     mapper: new DataMapper({ client: opts.dynamodb }),
   } as const;
 
-  const handler: Handler = (...args) =>
-    handleWebSocket(closure)(...args);
+  const handler: Handler = (...args) => handleWebSocket(closure)(...args);
 
   return {
     handler,
@@ -31,5 +30,5 @@ export const createInstance = (opts: ServerArgs) => {
   };
 };
 
-export { prepareResolvers } from "./utils";
-export * from "./pubsub/subscribe";
+export { prepareResolvers } from './utils';
+export * from './pubsub/subscribe';

@@ -1,8 +1,13 @@
-import { parse } from "graphql";
-import { CompleteMessage } from "graphql-ws";
-import { buildExecutionContext } from "graphql/execution/execute";
-import { constructContext, deleteConnection, getResolverAndArgs, promisify } from "../utils";
-import { MessageHandler } from "./types";
+import { parse } from 'graphql';
+import { CompleteMessage } from 'graphql-ws';
+import { buildExecutionContext } from 'graphql/execution/execute';
+import {
+  constructContext,
+  deleteConnection,
+  getResolverAndArgs,
+  promisify,
+} from '../utils';
+import { MessageHandler } from './types';
 
 export const complete: MessageHandler<CompleteMessage> = (c) => async ({
   event,
@@ -11,10 +16,9 @@ export const complete: MessageHandler<CompleteMessage> = (c) => async ({
   try {
     await promisify(() => c.onComplete?.({ event, message }));
 
-    const topicSubscriptions = await c.mapper.query(
-      c.model.Subscription,
-      { id: `${event.requestContext.connectionId!}|${message.id}` }
-    );
+    const topicSubscriptions = await c.mapper.query(c.model.Subscription, {
+      id: `${event.requestContext.connectionId!}|${message.id}`,
+    });
 
     let deletions = [] as Promise<any>[];
     for await (const entity of topicSubscriptions) {
@@ -33,7 +37,7 @@ export const complete: MessageHandler<CompleteMessage> = (c) => async ({
               undefined
             );
 
-            if (!("operation" in execContext)) {
+            if (!('operation' in execContext)) {
               throw execContext;
             }
 
@@ -53,7 +57,7 @@ export const complete: MessageHandler<CompleteMessage> = (c) => async ({
     }
 
     await Promise.all(deletions);
-  } catch(err) {
+  } catch (err) {
     await promisify(() => c.onError?.(err, { event, message }));
     await deleteConnection(event.requestContext);
   }

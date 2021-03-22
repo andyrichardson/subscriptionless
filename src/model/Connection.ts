@@ -1,5 +1,9 @@
 import { DynamoDbTable } from '@aws/dynamodb-data-mapper';
-import { attribute, hashKey, table } from '@aws/dynamodb-data-mapper-annotations';
+import {
+  attribute,
+  hashKey,
+  table,
+} from '@aws/dynamodb-data-mapper-annotations';
 import { APIGatewayEventRequestContext } from 'aws-lambda';
 
 /**

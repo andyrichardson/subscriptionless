@@ -1,4 +1,8 @@
-import { ConnectionInitMessage, SubscribeMessage, CompleteMessage } from 'graphql-ws';
+import {
+  ConnectionInitMessage,
+  SubscribeMessage,
+  CompleteMessage,
+} from 'graphql-ws';
 import { DataMapper } from '@aws/dynamodb-data-mapper';
 import { APIGatewayEvent } from 'aws-lambda';
 import { GraphQLSchema } from 'graphql';
@@ -13,9 +17,18 @@ export type ServerArgs = {
   onConnect?: (e: { event: APIGatewayEvent }) => MaybePromise<void>;
   onDisconnect?: (e: { event: APIGatewayEvent }) => MaybePromise<void>;
   /* Takes connection_init event and returns payload to be persisted (may include auth steps) */
-  onConnectionInit?: (e: { event: APIGatewayEvent, message: ConnectionInitMessage }) => MaybePromise<object>;
-  onSubscribe?: (e: { event: APIGatewayEvent, message: SubscribeMessage }) => MaybePromise<void>;
-  onComplete?: (e: { event: APIGatewayEvent, message: CompleteMessage }) => MaybePromise<void>;
+  onConnectionInit?: (e: {
+    event: APIGatewayEvent;
+    message: ConnectionInitMessage;
+  }) => MaybePromise<object>;
+  onSubscribe?: (e: {
+    event: APIGatewayEvent;
+    message: SubscribeMessage;
+  }) => MaybePromise<void>;
+  onComplete?: (e: {
+    event: APIGatewayEvent;
+    message: CompleteMessage;
+  }) => MaybePromise<void>;
   onError?: (error: any, context: any) => void;
 };
 
@@ -26,19 +39,19 @@ export type ServerClosure = {
   model: {
     Subscription: typeof Subscription;
     Connection: typeof Connection;
-  }
+  };
 } & Omit<ServerArgs, 'tableNames'>;
 
 type TableNames = {
   connections: string;
   subscriptions: string;
-}
+};
 
 export type WebsocketResponse = {
-  statusCode: number,
+  statusCode: number;
   headers?: Record<string, string>;
   body: string;
-}
+};
 
 export type SubscriptionDefinition = {
   topic: string;
@@ -54,4 +67,4 @@ export type SubscribePsuedoIterable = {
 
 export type SubscribeArgs = any[];
 
-export type Class = { new(...args: any[]): any; };
+export type Class = { new (...args: any[]): any };

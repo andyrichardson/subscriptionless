@@ -1,13 +1,19 @@
-import { SubscribeMessage, MessageType } from "graphql-ws";
-import { validate, parse } from "graphql";
+import { SubscribeMessage, MessageType } from 'graphql-ws';
+import { validate, parse } from 'graphql';
 import {
   buildExecutionContext,
   assertValidExecutionArguments,
-} from "graphql/execution/execute";
-import { MessageHandler } from "./types";
-import { constructContext, deleteConnection, getResolverAndArgs, promisify, sendMessage } from "../utils";
-import { assign } from "../model";
-import { ServerClosure, SubscribeHandler } from "../types";
+} from 'graphql/execution/execute';
+import { MessageHandler } from './types';
+import {
+  constructContext,
+  deleteConnection,
+  getResolverAndArgs,
+  promisify,
+  sendMessage,
+} from '../utils';
+import { assign } from '../model';
+import { ServerClosure, SubscribeHandler } from '../types';
 
 export const subscribe: MessageHandler<SubscribeMessage> = (c) => async ({
   event,
@@ -16,9 +22,11 @@ export const subscribe: MessageHandler<SubscribeMessage> = (c) => async ({
   try {
     const [connection] = await Promise.all([
       await c.mapper.get(
-        assign(new c.model.Connection(), { id: event.requestContext.connectionId! })
+        assign(new c.model.Connection(), {
+          id: event.requestContext.connectionId!,
+        })
       ),
-      await promisify(() => c.onSubscribe?.({ event, message }))
+      await promisify(() => c.onSubscribe?.({ event, message })),
     ]);
     const connectionParams = connection.payload || {};
 
@@ -39,7 +47,7 @@ export const subscribe: MessageHandler<SubscribeMessage> = (c) => async ({
       undefined
     );
 
-    if (!("operation" in execContext)) {
+    if (!('operation' in execContext)) {
       return sendMessage({
         ...event.requestContext,
         message: {
@@ -62,7 +70,12 @@ export const subscribe: MessageHandler<SubscribeMessage> = (c) => async ({
       await onSubscribe(root, args, context, info);
     }
 
-    const topicDefinitions = (field.subscribe as SubscribeHandler)(root, args, context, info).definitions; // Access subscribe instance
+    const topicDefinitions = (field.subscribe as SubscribeHandler)(
+      root,
+      args,
+      context,
+      info
+    ).definitions; // Access subscribe instance
     await Promise.all(
       topicDefinitions.map(async ({ topic, filter }) => {
         const subscription = assign(new c.model.Subscription(), {

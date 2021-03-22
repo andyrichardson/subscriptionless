@@ -23,17 +23,17 @@ export const typeDefs = gql`
 
 export const resolvers = {
   Query: {
-    articles: () => []
+    articles: () => [],
   },
   Mutation: {
-    publishArticle: () => ({})
+    publishArticle: () => ({}),
   },
   Subscription: {
     newArticles: {
       resolve: (event, args) => [event.payload],
       subscribe: subscribe('NEW_ARTICLE'),
-      onSubscribe: () => console.log("SUBSCRIBE!"),
-      onComplete: () => console.log("COMPLETE!"),
-    }
-  }
-}
+      onSubscribe: () => console.log('SUBSCRIBE!'),
+      onComplete: () => console.log('COMPLETE!'),
+    },
+  },
+};

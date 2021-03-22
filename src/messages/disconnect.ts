@@ -1,9 +1,9 @@
-import { parse } from "graphql";
-import { equals } from "@aws/dynamodb-expressions";
-import { buildExecutionContext } from "graphql/execution/execute";
-import { constructContext, getResolverAndArgs, promisify } from "../utils";
-import { MessageHandler } from "./types";
-import { assign } from "../model";
+import { parse } from 'graphql';
+import { equals } from '@aws/dynamodb-expressions';
+import { buildExecutionContext } from 'graphql/execution/execute';
+import { constructContext, getResolverAndArgs, promisify } from '../utils';
+import { MessageHandler } from './types';
+import { assign } from '../model';
 
 export const disconnect: MessageHandler<null> = (c) => async ({ event }) => {
   try {
@@ -14,7 +14,7 @@ export const disconnect: MessageHandler<null> = (c) => async ({ event }) => {
       {
         connectionId: equals(event.requestContext.connectionId),
       },
-      { indexName: "ConnectionIndex" }
+      { indexName: 'ConnectionIndex' }
     );
 
     const completed = {} as Record<string, boolean>;
@@ -37,7 +37,7 @@ export const disconnect: MessageHandler<null> = (c) => async ({ event }) => {
               undefined
             );
 
-            if (!("operation" in execContext)) {
+            if (!('operation' in execContext)) {
               throw execContext;
             }
 

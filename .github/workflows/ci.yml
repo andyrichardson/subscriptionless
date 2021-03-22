@@ -38,5 +38,4 @@ jobs:
         with:
           path: ./node_modules
           key: nodemodules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
-      - run: npm run prettier:check      
-      
+      - run: npm run prettier:check

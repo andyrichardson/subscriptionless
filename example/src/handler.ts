@@ -1,7 +1,7 @@
-import { makeExecutableSchema } from "@graphql-tools/schema";
-import { createInstance, prepareResolvers } from "subscriptionless";
-import { DynamoDB } from "aws-sdk";
-import { typeDefs, resolvers } from "./schema";
+import { makeExecutableSchema } from '@graphql-tools/schema';
+import { createInstance, prepareResolvers } from 'subscriptionless';
+import { DynamoDB } from 'aws-sdk';
+import { typeDefs, resolvers } from './schema';
 
 const schema = makeExecutableSchema({
   typeDefs,
@@ -27,7 +27,7 @@ export const snsHandler = (event) =>
   Promise.all(
     event.Records.map((r) =>
       instance.publish({
-        topic: r.Sns.TopicArn.substring(r.Sns.TopicArn.lastIndexOf(":") + 1), // Get topic name
+        topic: r.Sns.TopicArn.substring(r.Sns.TopicArn.lastIndexOf(':') + 1), // Get topic name
         payload: JSON.parse(r.Sns.Message),
       })
     )
