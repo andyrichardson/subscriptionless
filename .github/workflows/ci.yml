@@ -26,4 +26,17 @@ jobs:
           path: ./node_modules
           key: nodemodules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
       - run: npm run build
+  check-formatting:
+    name: check formatting
+    needs: install
+    runs-on: ubuntu-latest
+    container: 'node:14'
+    steps:
+      - uses: actions/checkout@v2
+      - name: Restore node modules
+        uses: actions/cache@v2
+        with:
+          path: ./node_modules
+          key: nodemodules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+      - run: npm run prettier:check      
       

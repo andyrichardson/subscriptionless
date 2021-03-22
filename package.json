@@ -26,7 +26,8 @@
   "scripts": {
     "start": "microbundle --target node -f cjs watch",
     "build": "microbundle --target node -f cjs",
-    "prepack": "rm -rf dist && npm run build"
+    "prepack": "rm -rf dist && npm run build",
+    "prettier:check": "prettier -c ."
   },
   "repository": {
     "type": "git",
@@ -44,6 +45,7 @@
     "graphql": "^15.5.0",
     "graphql-ws": "^4.1.3",
     "microbundle": "^0.13.0",
+    "prettier": "^2.2.1",
     "typescript": "^4.1.5"
   },
   "dependencies": {
@@ -52,7 +54,7 @@
     "@aws/dynamodb-expressions": "^0.7.3"
   },
   "peerDependencies": {
-    "graphql": ">= 14.0.0",
-    "aws-sdk": ">= 2.844.0"
+    "aws-sdk": ">= 2.844.0",
+    "graphql": ">= 14.0.0"
   }
 }
