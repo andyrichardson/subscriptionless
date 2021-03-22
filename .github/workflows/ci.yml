@@ -7,15 +7,23 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Cache node modules
+        id: cache
         uses: actions/cache@v2
-        env:
-          cache-name: cache-node-modules
         with:
           path: ./node_modules
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
-      - run: npm ci
+          key: nodemodules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+      - if: steps.cache.outputs.cache-hit != 'true'
+        run: npm ci
+  build:
+    needs: install
+    runs-on: ubuntu-latest
+    container: 'node:14'
+    steps:
+      - uses: actions/checkout@v2
+      - name: Restore node modules
+        uses: actions/cache@v2
+        with:
+          path: ./node_modules
+          key: nodemodules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
       - run: npm run build
+      
