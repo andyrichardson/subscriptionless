@@ -11,11 +11,11 @@ provider:
         - dynamodb:GetItem
         - dynamodb:PutItem
         - dynamodb:DeleteItem
-      Resource: "*"
+      Resource: '*'
     - Effect: Allow
       Action:
         - execute-api:*
-      Resource: "*"
+      Resource: '*'
   environment:
     SUBSCRIPTIONS_TABLE: subscriptions
     CONNECTIONS_TABLE: connections

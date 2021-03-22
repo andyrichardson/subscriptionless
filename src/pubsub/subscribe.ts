@@ -1,4 +1,9 @@
-import { SubscribeArgs, SubscribeHandler, SubscribePsuedoIterable, SubscriptionDefinition } from "../types";
+import {
+  SubscribeArgs,
+  SubscribeHandler,
+  SubscribePsuedoIterable,
+  SubscriptionDefinition,
+} from '../types';
 
 /** Creates subscribe handler */
 export const subscribe = (topic: string) => (...args: SubscribeArgs) =>
@@ -18,20 +23,24 @@ export const withFilter = (
     definitions: [
       {
         ...iterable.definitions[0],
-        filter: typeof filter === "function" ? filter(...args) : filter,
+        filter: typeof filter === 'function' ? filter(...args) : filter,
       },
     ],
   });
 };
 
 /** Merge multiple subscribe handlers */
-export const concat = (...handlers: SubscribeHandler[]) => (...args: SubscribeArgs) => createHandler({ definitions: handlers.map((h) => h(...args).definitions).flat() });
+export const concat = (...handlers: SubscribeHandler[]) => (
+  ...args: SubscribeArgs
+) =>
+  createHandler({
+    definitions: handlers.map((h) => h(...args).definitions).flat(),
+  });
 
 const createHandler = (arg: { definitions: SubscriptionDefinition[] }) => {
   const h: SubscribePsuedoIterable = (() => {
-    throw Error("Subscription handler should not have been called");
+    throw Error('Subscription handler should not have been called');
   }) as any;
   h.definitions = arg.definitions;
   return h;
 };
-

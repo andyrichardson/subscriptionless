@@ -53,7 +53,7 @@ Because of this limitation, there is no clear way to communicate subprotocol err
 #### Create a subscriptionless instance.
 
 ```ts
-import { createInstance } from "subscriptionless";
+import { createInstance } from 'subscriptionless';
 
 const instance = createInstance({
   dynamodb,
@@ -103,8 +103,8 @@ Use the `tableNames` argument to override the default table names.
 const instance = createInstance({
   /* ... */
   tableNames: {
-    connections: "my_connections",
-    subscriptions: "my_subscriptions",
+    connections: 'my_connections',
+    subscriptions: 'my_subscriptions',
   },
 });
 ```
@@ -236,7 +236,6 @@ resource "aws_dynamodb_table" "subscriptions-table" {
 
 </details>
 
-
 ## Usage
 
 ### PubSub
@@ -275,18 +274,18 @@ Wrap any `subscribe` function call in a `withFilter` to provide filter condition
 > Note: If a function is provided, it will be called **on subscription start** and must return a serializable object.
 
 ```ts
-import { withFilter, subscribe } from "subscriptionless/subscribe";
+import { withFilter, subscribe } from 'subscriptionless/subscribe';
 
 // Subscription agnostic filter
-withFilter(subscribe("MY_TOPIC"), {
-  attr1: "`attr1` must have this value",
+withFilter(subscribe('MY_TOPIC'), {
+  attr1: '`attr1` must have this value',
   attr2: {
-    attr3: "Nested attributes work fine",
+    attr3: 'Nested attributes work fine',
   },
 });
 
 // Subscription specific filter
-withFilter(subscribe("MY_TOPIC"), (root, args, context, info) => ({
+withFilter(subscribe('MY_TOPIC'), (root, args, context, info) => ({
   userId: args.userId,
 }));
 ```
@@ -300,9 +299,9 @@ withFilter(subscribe("MY_TOPIC"), (root, args, context, info) => ({
 Join multiple topic subscriptions together using `concat`.
 
 ```tsx
-import { concat, subscribe } from "subscriptionless/subscribe";
+import { concat, subscribe } from 'subscriptionless/subscribe';
 
-concat(subscribe("TOPIC_1"), subscribe("TOPIC_2"));
+concat(subscribe('TOPIC_1'), subscribe('TOPIC_2'));
 ```
 
 </details>
@@ -315,8 +314,8 @@ Use the `publish` on your subscriptionless instance to publish events to active 
 
 ```tsx
 instance.publish({
-  type: "MY_TOPIC",
-  payload: "HELLO",
+  type: 'MY_TOPIC',
+  payload: 'HELLO',
 });
 ```
 
@@ -328,7 +327,7 @@ export const snsHandler = (event) =>
   Promise.all(
     event.Records.map((r) =>
       instance.publish({
-        topic: r.Sns.TopicArn.substring(r.Sns.TopicArn.lastIndexOf(":") + 1), // Get topic name (e.g. "MY_TOPIC")
+        topic: r.Sns.TopicArn.substring(r.Sns.TopicArn.lastIndexOf(':') + 1), // Get topic name (e.g. "MY_TOPIC")
         payload: JSON.parse(r.Sns.Message),
       })
     )
@@ -336,7 +335,7 @@ export const snsHandler = (event) =>
 
 // Manual Invocation
 export const invocationHandler = (payload) =>
-  instance.publish({ topic: "MY_TOPIC", payload });
+  instance.publish({ topic: 'MY_TOPIC', payload });
 ```
 
 </details>
@@ -377,7 +376,7 @@ An object can be provided via the `context` attribute when calling `createInstan
 const instance = createInstance({
   /* ... */
   context: {
-    myAttr: "hello",
+    myAttr: 'hello',
   },
 });
 ```
@@ -398,7 +397,7 @@ The default context value is passed as an argument.
 const instance = createInstance({
   /* ... */
   context: ({ connectionParams }) => ({
-    myAttr: "hello",
+    myAttr: 'hello',
     user: connectionParams.user,
   }),
 });
@@ -417,7 +416,7 @@ Side effect handlers can be declared on subscription fields to handle `onSubscri
 For `onSubscribe` and `onComplete` side effects to work, resolvers must first be passed to `prepareResolvers` prior to schema construction.
 
 ```ts
-import { prepareResolvers } from "subscriptionless/subscribe";
+import { prepareResolvers } from 'subscriptionless/subscribe';
 
 const schema = makeExecutableSchema({
   typedefs,
@@ -438,7 +437,7 @@ export const resolver = {
       resolve: (event, args, context) => {
         /* ... */
       },
-      subscribe: subscribe("MY_TOPIC"),
+      subscribe: subscribe('MY_TOPIC'),
       onSubscribe: (root, args) => {
         /* Do something on subscription start */
       },
@@ -505,7 +504,7 @@ const instance = createInstance({
     const token = message.payload.token;
 
     if (!myValidation(token)) {
-      throw Error("Token validation failed");
+      throw Error('Token validation failed');
     }
 
     // Prevent sensitive data from being written to DB

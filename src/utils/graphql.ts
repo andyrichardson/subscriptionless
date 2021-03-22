@@ -1,23 +1,23 @@
-import { getOperationRootType } from "graphql";
+import { getOperationRootType } from 'graphql';
 import {
   buildResolveInfo,
   collectFields,
   ExecutionContext,
   getFieldDef,
-} from "graphql/execution/execute";
-import { addPath } from "graphql/jsutils/Path";
-import { ServerClosure } from "../types";
+} from 'graphql/execution/execute';
+import { addPath } from 'graphql/jsutils/Path';
+import { ServerClosure } from '../types';
 
 export const constructContext = (c: ServerClosure) => ({
   connectionParams,
 }: {
   connectionParams: object;
 }) =>
-  typeof c.context === "function"
+  typeof c.context === 'function'
     ? c.context({ connectionParams })
     : { ...c.context, connectionParams };
 
-export const getResolverAndArgs = (c: Omit<ServerClosure, "gateway">) => (
+export const getResolverAndArgs = (c: Omit<ServerClosure, 'gateway'>) => (
   execContext: ExecutionContext
 ) => {
   // Taken from graphql js - https://github.com/graphql/graphql-js/blob/main/src/subscription/subscribe.js#L190
@@ -49,12 +49,12 @@ export const getResolverAndArgs = (c: Omit<ServerClosure, "gateway">) => (
 
 const prepareResolver = <T extends object>(r: T) => {
   visit<any>(r, (node) => {
-    if (!("resolve" in node)) {
+    if (!('resolve' in node)) {
       return;
     }
 
     // Add event handlers to resolver fn so they can be accessed later
-    ["onSubscribe", "onComplete"].forEach(
+    ['onSubscribe', 'onComplete'].forEach(
       (key) => (node.resolve[key] = node[key])
     );
     return false;
@@ -68,7 +68,7 @@ export const prepareResolvers = <T extends object | object[]>(arg: T) =>
 const visit = <T = object>(node: T, handler: (node: T) => any) =>
   Object.values(node).forEach((value) => {
     console.log(value);
-    if (typeof value !== "object") {
+    if (typeof value !== 'object') {
       return;
     }
 

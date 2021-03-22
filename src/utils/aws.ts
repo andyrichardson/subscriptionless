@@ -1,11 +1,11 @@
-import { ApiGatewayManagementApi }from "aws-sdk";
-import { APIGatewayEventRequestContext } from "aws-lambda";
+import { ApiGatewayManagementApi } from 'aws-sdk';
+import { APIGatewayEventRequestContext } from 'aws-lambda';
 import {
   ConnectionAckMessage,
   NextMessage,
   CompleteMessage,
   ErrorMessage,
-} from "graphql-ws";
+} from 'graphql-ws';
 
 export const sendMessage = (
   a: {
@@ -14,10 +14,13 @@ export const sendMessage = (
       | NextMessage
       | CompleteMessage
       | ErrorMessage;
-  } & Pick<APIGatewayEventRequestContext, "connectionId" | "domainName" | "stage">
+  } & Pick<
+    APIGatewayEventRequestContext,
+    'connectionId' | 'domainName' | 'stage'
+  >
 ) =>
   new ApiGatewayManagementApi({
-    apiVersion: "latest",
+    apiVersion: 'latest',
     endpoint: `${a.domainName}/${a.stage}`,
   })
     .postToConnection({
@@ -27,10 +30,13 @@ export const sendMessage = (
     .promise();
 
 export const deleteConnection = (
-  a: Pick<APIGatewayEventRequestContext, "connectionId" | "domainName" | 'stage'>
+  a: Pick<
+    APIGatewayEventRequestContext,
+    'connectionId' | 'domainName' | 'stage'
+  >
 ) =>
   new ApiGatewayManagementApi({
-    apiVersion: "latest",
+    apiVersion: 'latest',
     endpoint: `${a.domainName}/${a.stage}`,
   })
     .deleteConnection({ ConnectionId: a.connectionId! })
