@@ -8,6 +8,7 @@ import {
   promisify,
 } from '../utils';
 import { MessageHandler } from './types';
+import { disconnect } from './disconnect';
 
 export const complete: MessageHandler<CompleteMessage> = (c) => async ({
   event,
@@ -58,7 +59,10 @@ export const complete: MessageHandler<CompleteMessage> = (c) => async ({
 
     await Promise.all(deletions);
   } catch (err) {
-    await promisify(() => c.onError?.(err, { event, message }));
+    await Promise.allSettled([
+      promisify(() => c.onError?.(err, { event, message })),
+      disconnect(c)({ event, message: null })
+    ]);
     await deleteConnection(event.requestContext);
   }
 };

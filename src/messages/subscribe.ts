@@ -14,6 +14,7 @@ import {
 } from '../utils';
 import { assign } from '../model';
 import { ServerClosure, SubscribeHandler } from '../types';
+import { disconnect } from './disconnect';
 
 export const subscribe: MessageHandler<SubscribeMessage> = (c) => async ({
   event,
@@ -95,7 +96,10 @@ export const subscribe: MessageHandler<SubscribeMessage> = (c) => async ({
       })
     );
   } catch (err) {
-    await promisify(() => c.onError?.(err, { event, message }));
+    await Promise.allSettled([
+      promisify(() => c.onError?.(err, { event, message })),
+      disconnect(c)({ event, message: null })
+    ]);
     await deleteConnection(event.requestContext);
   }
 };

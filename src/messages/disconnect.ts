@@ -5,6 +5,10 @@ import { constructContext, getResolverAndArgs, promisify } from '../utils';
 import { MessageHandler } from './types';
 import { assign } from '../model';
 
+/* 
+ * Handler for 'disconnect' messages. 
+ * Note: Can also be called internally in the case of an error/connection close.
+ **/
 export const disconnect: MessageHandler<null> = (c) => async ({ event }) => {
   try {
     await promisify(() => c.onDisconnect?.({ event }));
