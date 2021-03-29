@@ -1,6 +1,7 @@
 import { ConnectionInitMessage, MessageType } from 'graphql-ws';
 import { assign } from '../model';
 import { sendMessage, deleteConnection, promisify } from '../utils';
+import { disconnect } from './disconnect';
 import { MessageHandler } from './types';
 
 export const connection_init: MessageHandler<ConnectionInitMessage> = (
@@ -23,7 +24,10 @@ export const connection_init: MessageHandler<ConnectionInitMessage> = (
       message: { type: MessageType.ConnectionAck },
     });
   } catch (err) {
-    await promisify(() => c.onError?.(err, { event, message }));
+    await Promise.allSettled([
+      promisify(() => c.onError?.(err, { event, message })),
+      disconnect(c)({ event, message: null })
+    ]);
     await deleteConnection(event.requestContext);
   }
 };
