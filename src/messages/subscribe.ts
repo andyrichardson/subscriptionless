@@ -15,6 +15,7 @@ import {
 import { assign } from '../model';
 import { ServerClosure, SubscribeHandler } from '../types';
 
+/** Handler function for 'subscribe' message. */
 export const subscribe: MessageHandler<SubscribeMessage> = (c) => async ({
   event,
   message,

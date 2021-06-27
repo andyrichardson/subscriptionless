@@ -3,6 +3,7 @@ import { assign } from '../model';
 import { sendMessage, deleteConnection, promisify } from '../utils';
 import { MessageHandler } from './types';
 
+/** Handler function for 'connection_init' message. */
 export const connection_init: MessageHandler<ConnectionInitMessage> = (
   c
 ) => async ({ event, message }) => {

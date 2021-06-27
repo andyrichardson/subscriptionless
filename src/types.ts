@@ -2,6 +2,8 @@ import {
   ConnectionInitMessage,
   SubscribeMessage,
   CompleteMessage,
+  PingMessage,
+  PongMessage,
 } from 'graphql-ws';
 import { DataMapper } from '@aws/dynamodb-data-mapper';
 import { APIGatewayEvent } from 'aws-lambda';
@@ -28,6 +30,14 @@ export type ServerArgs = {
   onComplete?: (e: {
     event: APIGatewayEvent;
     message: CompleteMessage;
+  }) => MaybePromise<void>;
+  onPing?: (e: {
+    event: APIGatewayEvent;
+    message: PingMessage;
+  }) => MaybePromise<void>;
+  onPong?: (e: {
+    event: APIGatewayEvent;
+    message: PongMessage;
   }) => MaybePromise<void>;
   onError?: (error: any, context: any) => void;
 };

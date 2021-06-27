@@ -5,6 +5,8 @@ import {
   NextMessage,
   CompleteMessage,
   ErrorMessage,
+  PingMessage,
+  PongMessage,
 } from 'graphql-ws';
 
 export const sendMessage = (
@@ -13,7 +15,9 @@ export const sendMessage = (
       | ConnectionAckMessage
       | NextMessage
       | CompleteMessage
-      | ErrorMessage;
+      | ErrorMessage
+      | PingMessage
+      | PongMessage;
   } & Pick<
     APIGatewayEventRequestContext,
     'connectionId' | 'domainName' | 'stage'
