@@ -19,6 +19,7 @@ const instance = createInstance({
   schema,
   onConnectionInit: () => ({}),
   onError: console.error,
+  onPing: () => console.log('GOT PING'),
 });
 
 export const wsHandler = instance.handler;
@@ -32,3 +33,5 @@ export const snsHandler = (event) =>
       })
     )
   );
+
+export const pingHandler = instance.ping;

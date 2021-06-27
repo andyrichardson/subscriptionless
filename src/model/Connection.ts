@@ -17,4 +17,7 @@ export class Connection {
 
   @attribute()
   payload: Record<string, string>;
+
+  @attribute({ defaultProvider: () => false })
+  ponged: boolean;
 }

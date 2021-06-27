@@ -3,24 +3,28 @@ provider:
   name: aws
   stage: dev
   runtime: nodejs14.x
-  iamRoleStatements:
-    - Effect: Allow
-      Action:
-        - dynamodb:Query
-        - dynamodb:Scan
-        - dynamodb:GetItem
-        - dynamodb:PutItem
-        - dynamodb:DeleteItem
-      Resource: '*'
-    - Effect: Allow
-      Action:
-        - execute-api:*
-      Resource: '*'
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:DeleteItem
+          Resource: '*'
+        - Effect: Allow
+          Action:
+            - execute-api:*
+          Resource: '*'
   environment:
     SUBSCRIPTIONS_TABLE: subscriptions
     CONNECTIONS_TABLE: connections
 plugins:
   - serverless-plugin-typescript
+  - serverless-step-functions
+
 functions:
   subscription:
     handler: src/handler.wsHandler
@@ -31,11 +35,58 @@ functions:
           route: $disconnect
       - websocket:
           route: $default
+
   snsEvent:
     handler: src/handler.snsHandler
     events:
       - sns: NEW_ARTICLE
-resources:
+
+  # Ping/pong functions
+  ping:
+    handler: src/handler.pingHandler
+
+# Step function for server->client ping/pong (recommended)
+stepFunctions:
+  stateMachines:
+    ping:
+      events:
+        - websocket:
+            route: $connect
+      definition:
+        Comment: 'An example of the Amazon States Language using wait states'
+        StartAt: Delay
+        States:
+          # Send ping to client
+          Eval:
+            Type: Task
+            Resource:
+              Fn::GetAtt: [ping, Arn]
+            Next: Choose
+          # Wait max-duration to see if client pongs
+          Timeout:
+            Type: Wait
+            Seconds: 10 # Ping timeout
+            Next: End
+            # Next: Eval
+          # Delay before sending next ping (interval = pingTimeout.Seconds + pingDelay.seconds)
+          Delay:
+            Type: Wait
+            Seconds: 10 # Todo - change to something reasonable
+            Next: Eval
+          Choose:
+            Type: Choice
+            Choices:
+              - Variable: '$.choice'
+                StringEquals: 'Timeout'
+                Next: Timeout
+              - Variable: '$.choice'
+                StringEquals: 'Delay'
+                Next: Delay
+            Default: End
+          End:
+            Type: Pass
+            End: true
+
   Resources:
     # Table for tracking connections
     connectionsTable:
