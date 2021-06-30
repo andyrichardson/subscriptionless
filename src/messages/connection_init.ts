@@ -16,6 +16,7 @@ export const connection_init: MessageHandler<ConnectionInitMessage> = (
       id: event.requestContext.connectionId!,
       requestContext: event.requestContext,
       payload: res,
+      expiresAt: Math.round(Date.now() / 1000) + 60 * 60 * 3, // three hours from now
     });
     await c.mapper.put(connection);
     return sendMessage({
