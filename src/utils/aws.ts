@@ -1,5 +1,4 @@
 import { ApiGatewayManagementApi } from 'aws-sdk';
-import { APIGatewayEventRequestContext } from 'aws-lambda';
 import {
   ConnectionAckMessage,
   NextMessage,
@@ -8,9 +7,16 @@ import {
   PingMessage,
   PongMessage,
 } from 'graphql-ws';
+import { ServerClosure, APIGatewayWebSocketEvent } from '../types';
 
-export const sendMessage = (
-  a: {
+export const sendMessage = async (
+  c : ServerClosure,
+  {
+    connectionId: ConnectionId,
+    domainName,
+    stage,
+    message,
+  }: {
     message:
       | ConnectionAckMessage
       | NextMessage
@@ -19,29 +25,39 @@ export const sendMessage = (
       | PingMessage
       | PongMessage;
   } & Pick<
-    APIGatewayEventRequestContext,
+  APIGatewayWebSocketEvent['requestContext'],
     'connectionId' | 'domainName' | 'stage'
   >
-) =>
-  new ApiGatewayManagementApi({
+): Promise<void> => {
+  const api = c.apiGatewayManagementApi ?? new ApiGatewayManagementApi({
     apiVersion: 'latest',
-    endpoint: `${a.domainName}/${a.stage}`,
+    endpoint: `${domainName}/${stage}`,
   })
-    .postToConnection({
-      ConnectionId: a.connectionId!,
-      Data: JSON.stringify(a.message),
-    })
-    .promise();
 
-export const deleteConnection = (
-  a: Pick<
-    APIGatewayEventRequestContext,
-    'connectionId' | 'domainName' | 'stage'
-  >
-) =>
-  new ApiGatewayManagementApi({
-    apiVersion: 'latest',
-    endpoint: `${a.domainName}/${a.stage}`,
+  await api.postToConnection({
+    ConnectionId,
+    Data: JSON.stringify(message),
   })
-    .deleteConnection({ ConnectionId: a.connectionId! })
+  .promise();
+}
+
+export const deleteConnection = async (
+  c : ServerClosure,
+  {
+    connectionId: ConnectionId,
+    domainName,
+    stage
+  }: {
+    connectionId: string;
+    domainName: string;
+    stage: string;
+  }
+): Promise<void> => {
+  const api = c.apiGatewayManagementApi ?? new ApiGatewayManagementApi({
+    apiVersion: 'latest',
+    endpoint: `${domainName}/${stage}`,
+  })
+
+  await api.deleteConnection({ ConnectionId })
     .promise();
+}

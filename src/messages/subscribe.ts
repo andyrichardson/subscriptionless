@@ -48,7 +48,7 @@ export const subscribe: MessageHandler<SubscribeMessage> =
       );
 
       if (!('operation' in execContext)) {
-        return sendMessage({
+        return sendMessage(c, {
           ...event.requestContext,
           message: {
             type: MessageType.Next,
@@ -96,7 +96,7 @@ export const subscribe: MessageHandler<SubscribeMessage> =
       );
     } catch (err) {
       await promisify(() => c.onError?.(err, { event, message }));
-      await deleteConnection(event.requestContext);
+      await deleteConnection(c, event.requestContext);
     }
   };
 

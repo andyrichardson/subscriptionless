@@ -5,7 +5,7 @@ import {
 } from '@aws/dynamodb-expressions';
 import { parse, execute } from 'graphql';
 import { MessageType } from 'graphql-ws';
-import { assign, Subscription } from '../model';
+import { Subscription } from '../model';
 import { ServerClosure } from '../types';
 import { constructContext, sendMessage } from '../utils';
 
@@ -17,7 +17,7 @@ type PubSubEvent = {
 export const publish = (c: ServerClosure) => async (event: PubSubEvent) => {
   const subscriptions = await getFilteredSubs(c)(event);
   const iters = subscriptions.map(async (sub) => {
-    const result = execute(
+    const payload = await execute(
       c.schema,
       parse(sub.subscription.query),
       event,
@@ -27,12 +27,12 @@ export const publish = (c: ServerClosure) => async (event: PubSubEvent) => {
       undefined
     );
 
-    await sendMessage({
+    await sendMessage(c, {
       ...sub.requestContext,
       message: {
         id: sub.subscriptionId,
         type: MessageType.Next,
-        payload: await result,
+        payload,
       },
     });
   });
