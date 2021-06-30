@@ -51,7 +51,7 @@ const instance = createInstance({
 });
 ```
 
-#### Export the handler.
+#### Export the handler
 
 ```ts
 export const gatewayHandler = instance.gatewayHandler;
@@ -612,6 +612,32 @@ export const snsHandler = (event) =>
 // Manual Invocation
 export const invocationHandler = (payload) =>
   instance.publish({ topic: 'MY_TOPIC', payload });
+```
+
+</details>
+
+### Custom API Gateway Management API
+
+You can provide a pre-configured [`ApiGatewayManagementApi`](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/ApiGatewayManagementApi.html) object with a custom endpoint and additional configuration. This is used to manage websocket connections and send messages.
+
+<details>
+
+<summary>📖 Custom Endpoint</summary>
+
+A custom endpoint might be desired in some development of vpc setups.
+
+```ts
+import { ApiGatewayManagementApi } from 'aws-sdk';
+
+const apiGatewayManagementApi = new ApiGatewayManagementApi({
+  apiVersion: 'latest',
+  endpoint: `https://my-hard-coded-internal-domain.example/staging`,
+});
+
+const instance = createInstance({
+  /* ... */
+  apiGatewayManagementApi,
+});
 ```
 
 </details>

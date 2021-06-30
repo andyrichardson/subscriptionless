@@ -1,6 +1,10 @@
 import { Handler } from 'aws-lambda';
 import { GRAPHQL_TRANSPORT_WS_PROTOCOL, MessageType } from 'graphql-ws';
-import { APIGatewayWebSocketEvent, ServerClosure, WebsocketResponse } from './types';
+import {
+  APIGatewayWebSocketEvent,
+  ServerClosure,
+  WebsocketResponse,
+} from './types';
 import { complete, connection_init, subscribe, disconnect } from './messages';
 
 export const handleWebSocket = (

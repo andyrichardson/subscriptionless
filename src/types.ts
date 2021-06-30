@@ -6,7 +6,10 @@ import {
   PongMessage,
 } from 'graphql-ws';
 import { DataMapper } from '@aws/dynamodb-data-mapper';
-import { APIGatewayEventRequestContext, APIGatewayProxyEvent } from 'aws-lambda';
+import {
+  APIGatewayEventRequestContext,
+  APIGatewayProxyEvent,
+} from 'aws-lambda';
 import { GraphQLSchema } from 'graphql';
 import { ApiGatewayManagementApi, DynamoDB, StepFunctions } from 'aws-sdk';
 import { Subscription, Connection } from './model';
@@ -14,7 +17,7 @@ import { Subscription, Connection } from './model';
 export type ServerArgs = {
   schema: GraphQLSchema;
   dynamodb: DynamoDB;
-  apiGatewayManagementApi?: ApiGatewayManagementApi,
+  apiGatewayManagementApi?: ApiGatewayManagementApi;
   context?: ((arg: { connectionParams: any }) => object) | object;
   tableNames?: Partial<TableNames>;
   pingpong?: {
@@ -99,5 +102,5 @@ export interface APIGatewayWebSocketRequestContext extends APIGatewayEventReques
 }
 
 export interface APIGatewayWebSocketEvent extends APIGatewayProxyEvent {
-  requestContext: APIGatewayWebSocketRequestContext
+  requestContext: APIGatewayWebSocketRequestContext;
 }
