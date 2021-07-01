@@ -7,7 +7,7 @@ import {
   PingMessage,
   PongMessage,
 } from 'graphql-ws';
-import { ServerClosure, APIGatewayWebSocketEvent } from '../types';
+import { ServerClosure, APIGatewayWebSocketRequestContext } from '../types';
 
 export const sendMessage = async (
   c: ServerClosure,
@@ -25,7 +25,7 @@ export const sendMessage = async (
       | PingMessage
       | PongMessage;
   } & Pick<
-  APIGatewayWebSocketEvent['requestContext'],
+  APIGatewayWebSocketRequestContext,
     'connectionId' | 'domainName' | 'stage'
   >
 ): Promise<void> => {
@@ -50,11 +50,10 @@ export const deleteConnection = async (
     connectionId: ConnectionId,
     domainName,
     stage,
-  }: {
-    connectionId: string;
-    domainName: string;
-    stage: string;
-  }
+  }: Pick<
+    APIGatewayWebSocketRequestContext,
+    'connectionId' | 'domainName' | 'stage'
+  >
 ): Promise<void> => {
   const api =
     c.apiGatewayManagementApi ??
