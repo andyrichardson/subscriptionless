@@ -125,6 +125,9 @@ resources:
         KeySchema:
           - AttributeName: id
             KeyType: HASH
+        TimeToLiveSpecification:
+          AttributeName: expiresAt
+          Enabled: true
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
@@ -164,6 +167,9 @@ resources:
             ProvisionedThroughput:
               ReadCapacityUnits: 1
               WriteCapacityUnits: 1
+        TimeToLiveSpecification:
+          AttributeName: expiresAt
+          Enabled: true
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
@@ -186,6 +192,11 @@ resource "aws_dynamodb_table" "connections-table" {
   attribute {
     name = "id"
     type = "S"
+  }
+
+  ttl {
+    attribute_name = "expiresAt"
+    enabled        = true
   }
 }
 
@@ -226,6 +237,11 @@ resource "aws_dynamodb_table" "subscriptions-table" {
     write_capacity     = 1
     read_capacity      = 1
     projection_type    = "ALL"
+  }
+
+  ttl {
+    attribute_name = "expiresAt"
+    enabled        = true
   }
 }
 ```

@@ -38,7 +38,6 @@ export const connection_init: MessageHandler<ConnectionInitMessage> = (
       id: event.requestContext.connectionId!,
       requestContext: event.requestContext,
       payload: res,
-      pingerInvocation,
     });
     await c.mapper.put(connection);
     return sendMessage({
