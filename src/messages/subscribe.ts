@@ -90,6 +90,7 @@ export const subscribe: MessageHandler<SubscribeMessage> = (c) => async ({
           connectionId: event.requestContext.connectionId!,
           connectionParams,
           requestContext: event.requestContext,
+          expiresAt: Math.round(Date.now() / 1000) + 60 * 60 * 3, // three hours from now
         });
         await c.mapper.put(subscription);
       })

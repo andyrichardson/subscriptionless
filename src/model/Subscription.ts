@@ -52,4 +52,7 @@ export class Subscription {
     variableValues?: any;
     operationName?: string | null;
   };
+
+  @attribute({ type: 'Number' })
+  expiresAt: number;
 }
