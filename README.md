@@ -130,7 +130,7 @@ resources:
           - AttributeName: id
             KeyType: HASH
         TimeToLiveSpecification:
-          AttributeName: expiresAt
+          AttributeName: ttl
           Enabled: true
         ProvisionedThroughput:
           ReadCapacityUnits: 1
@@ -172,7 +172,7 @@ resources:
               ReadCapacityUnits: 1
               WriteCapacityUnits: 1
         TimeToLiveSpecification:
-          AttributeName: expiresAt
+          AttributeName: ttl
           Enabled: true
         ProvisionedThroughput:
           ReadCapacityUnits: 1
@@ -199,7 +199,7 @@ resource "aws_dynamodb_table" "connections-table" {
   }
 
   ttl {
-    attribute_name = "expiresAt"
+    attribute_name = "ttl"
     enabled        = true
   }
 }
@@ -244,7 +244,7 @@ resource "aws_dynamodb_table" "subscriptions-table" {
   }
 
   ttl {
-    attribute_name = "expiresAt"
+    attribute_name = "ttl"
     enabled        = true
   }
 }
