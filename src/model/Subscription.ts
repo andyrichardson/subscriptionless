@@ -54,5 +54,5 @@ export class Subscription {
   };
 
   @attribute({ type: 'Number' })
-  expiresAt: number;
+  ttl: number;
 }

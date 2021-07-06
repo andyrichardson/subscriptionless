@@ -1,5 +1,6 @@
 import { attribute, hashKey } from '@aws/dynamodb-data-mapper-annotations';
 import { APIGatewayEventRequestContext } from 'aws-lambda';
+import { addHours } from '../utils';
 
 /**
  * Connection established with `connection_init`
@@ -21,11 +22,10 @@ export class Connection {
   @attribute()
   payload: Record<string, string>;
 
-  /** Step function arn */
-  @attribute()
-  pingerInvocation: string;
-
   /** has a pong been returned */
   @attribute({ defaultProvider: () => false })
   hasPonged: boolean;
+
+  @attribute({ defaultProvider: () => addHours(new Date(), 3) })
+  ttl: Date;
 }
