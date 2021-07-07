@@ -8,7 +8,7 @@ import {
 import { DataMapper } from '@aws/dynamodb-data-mapper';
 import { APIGatewayEvent } from 'aws-lambda';
 import { GraphQLSchema } from 'graphql';
-import { DynamoDB } from 'aws-sdk';
+import { DynamoDB, StepFunctions } from 'aws-sdk';
 import { Subscription, Connection } from './model';
 
 export type ServerArgs = {
@@ -16,6 +16,7 @@ export type ServerArgs = {
   dynamodb: DynamoDB;
   context?: ((arg: { connectionParams: any }) => object) | object;
   tableNames?: Partial<TableNames>;
+  pinger?: string;
   onConnect?: (e: { event: APIGatewayEvent }) => MaybePromise<void>;
   onDisconnect?: (e: { event: APIGatewayEvent }) => MaybePromise<void>;
   /* Takes connection_init event and returns payload to be persisted (may include auth steps) */
@@ -78,3 +79,11 @@ export type SubscribePsuedoIterable = {
 export type SubscribeArgs = any[];
 
 export type Class = { new (...args: any[]): any };
+
+export type StateFunctionInput = {
+  connectionId: string;
+  domainName: string;
+  stage: string;
+  state: 'PING' | 'REVIEW' | 'ABORT';
+  seconds: number;
+};

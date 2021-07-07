@@ -7,20 +7,26 @@ provider:
     role:
       statements:
         - Effect: Allow
+          Resource: '*'
           Action:
             - dynamodb:Query
             - dynamodb:Scan
             - dynamodb:GetItem
             - dynamodb:PutItem
             - dynamodb:DeleteItem
-          Resource: '*'
         - Effect: Allow
+          Resource: '*'
           Action:
             - execute-api:*
+        - Effect: Allow
           Resource: '*'
+          Action:
+            - states:StartExecution
+            - states:StopExecution
   environment:
     SUBSCRIPTIONS_TABLE: subscriptions
     CONNECTIONS_TABLE: connections
+
 plugins:
   - serverless-plugin-typescript
   - serverless-step-functions
@@ -28,6 +34,8 @@ plugins:
 functions:
   subscription:
     handler: src/handler.wsHandler
+    environment:
+      PING_STATE_MACHINE_ARN: ${self:resources.Outputs.PingStateMachine.Value}
     events:
       - websocket:
           route: $connect
@@ -54,39 +62,32 @@ stepFunctions:
             route: $connect
       definition:
         Comment: 'An example of the Amazon States Language using wait states'
-        StartAt: Delay
+        StartAt: Wait
         States:
           # Send ping to client
           Eval:
             Type: Task
-            Resource:
-              Fn::GetAtt: [ping, Arn]
+            Resource: !GetAtt ping.Arn
             Next: Choose
           # Wait max-duration to see if client pongs
-          Timeout:
+          Wait:
             Type: Wait
-            Seconds: 10 # Ping timeout
-            Next: End
-            # Next: Eval
-          # Delay before sending next ping (interval = pingTimeout.Seconds + pingDelay.seconds)
-          Delay:
-            Type: Wait
-            Seconds: 10 # Todo - change to something reasonable
+            SecondsPath: '$.seconds' # Ping timeout
             Next: Eval
+          # Delay before sending next ping (interval = pingTimeout.Seconds + pingDelay.seconds)
           Choose:
             Type: Choice
             Choices:
-              - Variable: '$.choice'
-                StringEquals: 'Timeout'
-                Next: Timeout
-              - Variable: '$.choice'
-                StringEquals: 'Delay'
-                Next: Delay
+              - Not:
+                  Variable: '$.state'
+                  StringEquals: 'ABORT'
+                Next: Wait
             Default: End
           End:
             Type: Pass
             End: true
 
+resources:
   Resources:
     # Table for tracking connections
     connectionsTable:
@@ -141,3 +142,29 @@ stepFunctions:
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
+
+    # PingStepFunctionsStateMachineRole:
+    #   Type: AWS::IAM::Role
+    #   Properties:
+    #     RoleName: RoleName
+
+    #     AssumeRolePolicyDocument:
+    #       Statement:
+    #         - Effect: Allow
+    #           Principal:
+    #             Service:
+    #               - states.amazonaws.com
+    #           Action:
+    #             - sts:AssumeRole
+
+  extensions:
+    PingStepFunctionsStateMachine:
+      Properties:
+        RoleArn: !GetAtt IamRoleLambdaExecution.Arn
+      DependsOn:
+        - IamRoleLambdaExecution
+
+  Outputs:
+    PingStateMachine:
+      Value:
+        Ref: PingStepFunctionsStateMachine

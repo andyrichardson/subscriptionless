@@ -12,6 +12,7 @@ const instance = createInstance({
   dynamodb: new DynamoDB({
     logger: console,
   }),
+  pinger: process.env.PING_STATE_MACHINE_ARN,
   tableNames: {
     connections: process.env.CONNECTIONS_TABLE,
     subscriptions: process.env.SUBSCRIPTIONS_TABLE,
