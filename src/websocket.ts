@@ -8,6 +8,7 @@ import {
   disconnect,
   ping,
 } from './messages';
+import { pong } from './messages/pong';
 
 export const handleWebSocket = (
   c: ServerClosure
@@ -59,6 +60,14 @@ export const handleWebSocket = (
 
     if (message.type === MessageType.Ping) {
       await ping(c)({ event, message });
+      return {
+        statusCode: 200,
+        body: '',
+      };
+    }
+
+    if (message.type === MessageType.Pong) {
+      await pong(c)({ event, message });
       return {
         statusCode: 200,
         body: '',

@@ -14,6 +14,7 @@ provider:
             - dynamodb:GetItem
             - dynamodb:PutItem
             - dynamodb:DeleteItem
+            - dynamodb:UpdateItem
         - Effect: Allow
           Resource: '*'
           Action:
@@ -23,6 +24,11 @@ provider:
           Action:
             - states:StartExecution
             - states:StopExecution
+        - Effect: Allow
+          Resource: '*'
+          Action:
+            - lambda:InvokeFunction
+
   environment:
     SUBSCRIPTIONS_TABLE: subscriptions
     CONNECTIONS_TABLE: connections
@@ -57,6 +63,7 @@ functions:
 stepFunctions:
   stateMachines:
     ping:
+      role: !GetAtt IamRoleLambdaExecution.Arn
       events:
         - websocket:
             route: $connect
@@ -164,7 +171,136 @@ resources:
       DependsOn:
         - IamRoleLambdaExecution
 
+    IamRoleLambdaExecution:
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - lambda.amazonaws.com
+                  - states.amazonaws.com
+              Action:
+                - sts:AssumeRole
+
   Outputs:
     PingStateMachine:
       Value:
         Ref: PingStepFunctionsStateMachine
+
+    #         },
+    # "IamRoleLambdaExecution": {
+    #   "Type": "AWS::IAM::Role",
+    #   "Properties": {
+    #     "AssumeRolePolicyDocument": {
+    #       "Version": "2012-10-17",
+    #       "Statement": [
+    #         {
+    #           "Effect": "Allow",
+    #           "Principal": {
+    #             "Service": [
+    #               "lambda.amazonaws.com"
+    #             ]
+    #           },
+    #           "Action": [
+    #             "sts:AssumeRole"
+    #           ]
+    #         }
+    #       ]
+    #     },
+    #     "Policies": [
+    #       {
+    #         "PolicyName": {
+    #           "Fn::Join": [
+    #             "-",
+    #             [
+    #               "subscriptionless-example",
+    #               "dev",
+    #               "lambda"
+    #             ]
+    #           ]
+    #         },
+    #         "PolicyDocument": {
+    #           "Version": "2012-10-17",
+    #           "Statement": [
+    #             {
+    #               "Effect": "Allow",
+    #               "Action": [
+    #                 "logs:CreateLogStream",
+    #                 "logs:CreateLogGroup"
+    #               ],
+    #               "Resource": [
+    #                 {
+    #                   "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/subscriptionless-example-dev*:*"
+    #                 }
+    #               ]
+    #             },
+    #             {
+    #               "Effect": "Allow",
+    #               "Action": [
+    #                 "logs:PutLogEvents"
+    #               ],
+    #               "Resource": [
+    #                 {
+    #                   "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/subscriptionless-example-dev*:*:*"
+    #                 }
+    #               ]
+    #             },
+    #             {
+    #               "Effect": "Allow",
+    #               "Resource": "*",
+    #               "Action": [
+    #                 "dynamodb:Query",
+    #                 "dynamodb:Scan",
+    #                 "dynamodb:GetItem",
+    #                 "dynamodb:PutItem",
+    #                 "dynamodb:DeleteItem"
+    #               ]
+    #             },
+    #             {
+    #               "Effect": "Allow",
+    #               "Resource": "*",
+    #               "Action": [
+    #                 "execute-api:*"
+    #               ]
+    #             },
+    #             {
+    #               "Effect": "Allow",
+    #               "Resource": "*",
+    #               "Action": [
+    #                 "states:StartExecution",
+    #                 "states:StopExecution"
+    #               ]
+    #             },
+    #             {
+    #               "Effect": "Allow",
+    #               "Action": [
+    #                 "execute-api:ManageConnections"
+    #               ],
+    #               "Resource": [
+    #                 {
+    #                   "Fn::Sub": "arn:${AWS::Partition}:execute-api:*:*:*/@connections/*"
+    #                 }
+    #               ]
+    #             }
+    #           ]
+    #         }
+    #       }
+    #     ],
+    #     "Path": "/",
+    #     "RoleName": {
+    #       "Fn::Join": [
+    #         "-",
+    #         [
+    #           "subscriptionless-example",
+    #           "dev",
+    #           {
+    #             "Ref": "AWS::Region"
+    #           },
+    #           "lambdaRole"
+    #         ]
+    #       ]
+    #     }
+    #   }
+    # },
