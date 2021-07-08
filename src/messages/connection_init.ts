@@ -14,11 +14,11 @@ export const connection_init: MessageHandler<ConnectionInitMessage> = (
       ? await promisify(() => c.onConnectionInit!({ event, message }))
       : message.payload;
 
-    const pingerInvocation = c.pinger
+    const pingerInvocation = c.pingpong
       ? (
           await new StepFunctions()
             .startExecution({
-              stateMachineArn: c.pinger,
+              stateMachineArn: c.pingpong.machine,
               name: event.requestContext.connectionId!,
               input: JSON.stringify({
                 connectionId: event.requestContext.connectionId!,
@@ -26,7 +26,7 @@ export const connection_init: MessageHandler<ConnectionInitMessage> = (
                 stage: event.requestContext.stage,
                 state: 'PING',
                 choice: 'WAIT',
-                seconds: 10,
+                seconds: c.pingpong.delay,
               } as StateFunctionInput),
             })
             .promise()

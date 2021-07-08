@@ -19,7 +19,7 @@ export const ping = (c: ServerClosure) => async (
     return {
       ...input,
       state: 'REVIEW',
-      seconds: 60, // Todo - change to user arg
+      seconds: c.pingpong!.delay,
     };
   }
 
@@ -29,7 +29,7 @@ export const ping = (c: ServerClosure) => async (
     return {
       ...input,
       state: 'PING',
-      seconds: 20,
+      seconds: c.pingpong!.timeout,
     };
   }
 

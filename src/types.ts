@@ -16,7 +16,11 @@ export type ServerArgs = {
   dynamodb: DynamoDB;
   context?: ((arg: { connectionParams: any }) => object) | object;
   tableNames?: Partial<TableNames>;
-  pinger?: string;
+  pingpong?: {
+    machine: string;
+    delay: number;
+    timeout: number;
+  };
   onConnect?: (e: { event: APIGatewayEvent }) => MaybePromise<void>;
   onDisconnect?: (e: { event: APIGatewayEvent }) => MaybePromise<void>;
   /* Takes connection_init event and returns payload to be persisted (may include auth steps) */
