@@ -28,17 +28,7 @@ There are a few noteworthy limitations to the AWS API Gateway WebSocket implemen
 
 #### Ping/Pong
 
-For whatever reason, AWS API Gateway does not support WebSocket protocol level ping/pong.
-
-This means early detection of unclean client disconnects is near impossible [(graphql-ws will not implement subprotocol level ping/pong)](https://github.com/enisdenjo/graphql-ws/issues/117).
-
-#### Socket idleness
-
-API Gateway considers an idle connection to be one where no messages have been sent on the socket for a fixed duration [(currently 10 minutes)](https://docs.aws.amazon.com/apigateway/latest/developerguide/limits.html#apigateway-execution-service-websocket-limits-table).
-
-Again, the WebSocket spec has support for detecting idle connections (ping/pong) but API Gateway doesn't use it. This means, in the case where both parties are connected, and no message is sent on the socket for the defined duration (direction agnostic), API Gateway will close the socket.
-
-A quick fix for this is to set up immediate reconnection on the client side.
+Use of this library without ping/pong is strongly discouraged [(see here)](https://github.com/andyrichardson/subscriptionless/issues/3)
 
 #### Socket errors
 
@@ -71,7 +61,8 @@ export const handler = instance.handler;
 
 Set up API Gateway to route WebSocket events to the exported handler.
 
-_Serverless framework example._
+<details>
+  <summary>💾 serverless framework example</summary>
 
 ```yaml
 functions:
@@ -86,6 +77,11 @@ functions:
       - websocket:
           route: $default
 ```
+
+</details>
+
+<details>
+  <summary>💾 terraform example (TODO)</summary>
 
 </details>
 
@@ -233,6 +229,129 @@ resource "aws_dynamodb_table" "subscriptions-table" {
   }
 }
 ```
+
+</details>
+
+#### Configure ping/pong
+
+Set up server->client ping/pong for idleness detection.
+
+> Note: While not a hard requirement, this, or client->server ping/pong, is [strongly recommended](https://github.com/andyrichardson/subscriptionless/issues/3)
+
+<details>
+
+<summary>📖 Configuring instance</summary>
+
+Pass a `pingpong` argument to configure delays and what state machine to invoke.
+
+```ts
+const instance = createInstance({
+  /* ... */
+  pingpong: {
+    delay: 10, // Time to wait before sending a ping (seconds)
+    timeout: 30, // Threshold for a pong response following a ping (seconds)
+    machine: process.env.MACHINE_ARN, // State machine to invoke
+  },
+});
+```
+
+Export the resulting instance ping handler for use in the state machine.
+
+```ts
+export const machine = instance.machine;
+```
+
+</details>
+
+<details>
+
+<summary>💾 serverless framework example</summary>
+
+Create a function which exports the aforementioned machine handler.
+
+```yaml
+functions:
+  machine:
+    handler: src/handler.machine
+```
+
+Use the [serverless-step-functions](https://github.com/serverless-operations/serverless-step-functions) plugin to create a state machine which invokes the machine handler.
+
+```yaml
+stepFunctions:
+  stateMachines:
+    ping:
+      role: !GetAtt IamRoleLambdaExecution.Arn
+      definition:
+        StartAt: Wait
+        States:
+          Eval:
+            Type: Task
+            Resource: !GetAtt machine.Arn
+            Next: Choose
+          Wait:
+            Type: Wait
+            SecondsPath: '$.seconds'
+            Next: Eval
+          Choose:
+            Type: Choice
+            Choices:
+              - Not:
+                  Variable: '$.state'
+                  StringEquals: 'ABORT'
+                Next: Wait
+            Default: End
+          End:
+            Type: Pass
+            End: true
+```
+
+The state machine _arn_ can be passed to your websocket handler function via outputs.
+
+> Note: [naming of resources](https://www.serverless.com/framework/docs/providers/aws/guide/resources/) will be dependent the function/machine naming in the serverless config.
+
+```yaml
+functions:
+  subscription:
+    handler: src/handler.wsHandler
+    environment:
+      PING_STATE_MACHINE_ARN: ${self:resources.Outputs.PingStateMachine.Value}
+    # ...
+
+resources:
+  Outputs:
+    PingStateMachine:
+      Value:
+        Ref: PingStepFunctionsStateMachine
+```
+
+On `connection_init`, the state machine will be invoked. Ensure that the websocket handler has the following permissions.
+
+```yaml
+- Effect: Allow
+  Resource: !GetAtt PingStepFunctionsStateMachine.Arn
+  Action:
+    - states:StartExecution
+```
+
+The state machine itself will need the following permissions
+
+```yaml
+- Effect: Allow
+  Resource: !GetAtt connectionsTable.Arn
+  Action:
+    - dynamodb:GetItem
+    - dynamodb:UpdateItem
+- Effect: Allow
+  Resource: '*'
+  Action:
+    - execute-api:*
+```
+
+</details>
+
+<details>
+  <summary>💾 terraform example (TODO)</summary>
 
 </details>
 
