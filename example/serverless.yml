@@ -7,28 +7,23 @@ provider:
     role:
       statements:
         - Effect: Allow
-          Resource: '*'
-          Action:
-            - dynamodb:Query
-            - dynamodb:Scan
-            - dynamodb:GetItem
-            - dynamodb:PutItem
-            - dynamodb:DeleteItem
-            - dynamodb:UpdateItem
+          Action: dynamodb:*
+          Resource:
+            - !GetAtt ConnectionsTable.Arn
+            - !GetAtt SubscriptionsTable.Arn
         - Effect: Allow
-          Resource: '*'
-          Action:
-            - execute-api:*
+          Action: execute-api:*
+          Resource:
+            - !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebsocketsApi}/*'
         - Effect: Allow
-          Resource: '*'
-          Action:
-            - states:StartExecution
-            - states:StopExecution
+          Action: states:StartExecution
+          Resource:
+            - !Sub 'arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:PingStepFunctionsStateMachine-*'
         - Effect: Allow
-          Resource: '*'
+          Resource:
+            - !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${self:service}-${self:provider.stage}-machine'
           Action:
             - lambda:InvokeFunction
-
   environment:
     SUBSCRIPTIONS_TABLE: subscriptions
     CONNECTIONS_TABLE: connections
@@ -50,14 +45,15 @@ functions:
       - websocket:
           route: $default
 
+  # Example push-based event
   snsEvent:
     handler: src/handler.snsHandler
     events:
       - sns: NEW_ARTICLE
 
   # Ping/pong functions
-  ping:
-    handler: src/handler.pingHandler
+  machine:
+    handler: src/handler.machine
 
 # Step function for server->client ping/pong (recommended)
 stepFunctions:
@@ -71,17 +67,14 @@ stepFunctions:
         Comment: 'An example of the Amazon States Language using wait states'
         StartAt: Wait
         States:
-          # Send ping to client
           Eval:
             Type: Task
-            Resource: !GetAtt ping.Arn
+            Resource: !GetAtt machine.Arn
             Next: Choose
-          # Wait max-duration to see if client pongs
           Wait:
             Type: Wait
-            SecondsPath: '$.seconds' # Ping timeout
+            SecondsPath: '$.seconds'
             Next: Eval
-          # Delay before sending next ping (interval = pingTimeout.Seconds + pingDelay.seconds)
           Choose:
             Type: Choice
             Choices:
@@ -97,7 +90,7 @@ stepFunctions:
 resources:
   Resources:
     # Table for tracking connections
-    connectionsTable:
+    ConnectionsTable:
       Type: AWS::DynamoDB::Table
       Properties:
         TableName: ${self:provider.environment.CONNECTIONS_TABLE}
@@ -111,7 +104,7 @@ resources:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
     # Table for tracking subscriptions
-    subscriptionsTable:
+    SubscriptionsTable:
       Type: AWS::DynamoDB::Table
       Properties:
         TableName: ${self:provider.environment.SUBSCRIPTIONS_TABLE}
@@ -150,20 +143,6 @@ resources:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
 
-    # PingStepFunctionsStateMachineRole:
-    #   Type: AWS::IAM::Role
-    #   Properties:
-    #     RoleName: RoleName
-
-    #     AssumeRolePolicyDocument:
-    #       Statement:
-    #         - Effect: Allow
-    #           Principal:
-    #             Service:
-    #               - states.amazonaws.com
-    #           Action:
-    #             - sts:AssumeRole
-
   extensions:
     PingStepFunctionsStateMachine:
       Properties:
@@ -188,119 +167,3 @@ resources:
     PingStateMachine:
       Value:
         Ref: PingStepFunctionsStateMachine
-
-    #         },
-    # "IamRoleLambdaExecution": {
-    #   "Type": "AWS::IAM::Role",
-    #   "Properties": {
-    #     "AssumeRolePolicyDocument": {
-    #       "Version": "2012-10-17",
-    #       "Statement": [
-    #         {
-    #           "Effect": "Allow",
-    #           "Principal": {
-    #             "Service": [
-    #               "lambda.amazonaws.com"
-    #             ]
-    #           },
-    #           "Action": [
-    #             "sts:AssumeRole"
-    #           ]
-    #         }
-    #       ]
-    #     },
-    #     "Policies": [
-    #       {
-    #         "PolicyName": {
-    #           "Fn::Join": [
-    #             "-",
-    #             [
-    #               "subscriptionless-example",
-    #               "dev",
-    #               "lambda"
-    #             ]
-    #           ]
-    #         },
-    #         "PolicyDocument": {
-    #           "Version": "2012-10-17",
-    #           "Statement": [
-    #             {
-    #               "Effect": "Allow",
-    #               "Action": [
-    #                 "logs:CreateLogStream",
-    #                 "logs:CreateLogGroup"
-    #               ],
-    #               "Resource": [
-    #                 {
-    #                   "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/subscriptionless-example-dev*:*"
-    #                 }
-    #               ]
-    #             },
-    #             {
-    #               "Effect": "Allow",
-    #               "Action": [
-    #                 "logs:PutLogEvents"
-    #               ],
-    #               "Resource": [
-    #                 {
-    #                   "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/subscriptionless-example-dev*:*:*"
-    #                 }
-    #               ]
-    #             },
-    #             {
-    #               "Effect": "Allow",
-    #               "Resource": "*",
-    #               "Action": [
-    #                 "dynamodb:Query",
-    #                 "dynamodb:Scan",
-    #                 "dynamodb:GetItem",
-    #                 "dynamodb:PutItem",
-    #                 "dynamodb:DeleteItem"
-    #               ]
-    #             },
-    #             {
-    #               "Effect": "Allow",
-    #               "Resource": "*",
-    #               "Action": [
-    #                 "execute-api:*"
-    #               ]
-    #             },
-    #             {
-    #               "Effect": "Allow",
-    #               "Resource": "*",
-    #               "Action": [
-    #                 "states:StartExecution",
-    #                 "states:StopExecution"
-    #               ]
-    #             },
-    #             {
-    #               "Effect": "Allow",
-    #               "Action": [
-    #                 "execute-api:ManageConnections"
-    #               ],
-    #               "Resource": [
-    #                 {
-    #                   "Fn::Sub": "arn:${AWS::Partition}:execute-api:*:*:*/@connections/*"
-    #                 }
-    #               ]
-    #             }
-    #           ]
-    #         }
-    #       }
-    #     ],
-    #     "Path": "/",
-    #     "RoleName": {
-    #       "Fn::Join": [
-    #         "-",
-    #         [
-    #           "subscriptionless-example",
-    #           "dev",
-    #           {
-    #             "Ref": "AWS::Region"
-    #           },
-    #           "lambdaRole"
-    #         ]
-    #       ]
-    #     }
-    #   }
-    # },

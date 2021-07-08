@@ -12,7 +12,11 @@ const instance = createInstance({
   dynamodb: new DynamoDB({
     logger: console,
   }),
-  pinger: process.env.PING_STATE_MACHINE_ARN,
+  pingpong: {
+    machine: process.env.PING_STATE_MACHINE_ARN!,
+    delay: 10,
+    timeout: 30,
+  },
   tableNames: {
     connections: process.env.CONNECTIONS_TABLE,
     subscriptions: process.env.SUBSCRIPTIONS_TABLE,
@@ -20,7 +24,6 @@ const instance = createInstance({
   schema,
   onConnectionInit: () => ({}),
   onError: console.error,
-  onPing: () => console.log('GOT PING'),
 });
 
 export const wsHandler = instance.handler;
@@ -35,4 +38,4 @@ export const snsHandler = (event) =>
     )
   );
 
-export const pingHandler = instance.ping;
+export const machine = instance.machine;

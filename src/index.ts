@@ -4,7 +4,7 @@ import { ServerArgs } from './types';
 import { handleWebSocket } from './websocket';
 import { publish } from './pubsub/publish';
 import { createModel, Connection, Subscription } from './model';
-import { ping } from './ping';
+import { machine } from './machine';
 
 export const createInstance = (opts: ServerArgs) => {
   const closure = {
@@ -27,7 +27,7 @@ export const createInstance = (opts: ServerArgs) => {
 
   return {
     handler,
-    ping: ping(closure),
+    machine: machine(closure),
     publish: publish(closure),
   };
 };

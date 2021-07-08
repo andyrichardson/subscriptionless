@@ -3,7 +3,7 @@ import { assign } from './model';
 import { ServerClosure, StateFunctionInput } from './types';
 import { sendMessage, deleteConnection } from './utils';
 
-export const ping = (c: ServerClosure) => async (
+export const machine = (c: ServerClosure) => async (
   input: StateFunctionInput
 ): Promise<StateFunctionInput> => {
   const connection = assign(new c.model.Connection(), {
