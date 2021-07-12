@@ -21,7 +21,7 @@ export class Connection {
   /** connection_init payload (post-parse) */
   @attribute()
   payload: Record<string, string>;
-  
+
   @attribute({ defaultProvider: () => addHours(new Date(), 3) })
   ttl: Date;
 
