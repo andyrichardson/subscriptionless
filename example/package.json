@@ -4,11 +4,13 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "deploy": "sls deploy"
+    "deploy": "sls deploy",
+    "build": "microbundle src/handler.ts -f cjs --target node -o dist --external none"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "microbundle": "^0.13.3",
     "serverless": "^2.48.0",
     "serverless-plugin-typescript": "^1.1.9",
     "serverless-step-functions": "^2.30.0",

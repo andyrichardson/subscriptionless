@@ -22,7 +22,7 @@ resource "aws_iam_policy" "apigateway" {
       {
         Action   = ["execute-api:*"]
         Effect   = "Allow"
-        Resource = [aws_apigatewayv2_api.ws]
+        Resource = [aws_apigatewayv2_api.ws.arn]
       }
     ]
   })
@@ -30,7 +30,7 @@ resource "aws_iam_policy" "apigateway" {
 
 # Allow invocation of state machine
 resource "aws_iam_policy" "statemachine" {
-  name = "subscriptionless-apigateway"
+  name = "subscriptionless-statemachine"
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -45,7 +45,7 @@ resource "aws_iam_policy" "statemachine" {
 
 # Policy for ws handler
 resource "aws_iam_role" "wsHandler" {
-  name = "serverless_example_lambda"
+  name = "subscriptionless-wsHandler"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -60,24 +60,12 @@ resource "aws_iam_role" "wsHandler" {
       },
     ]
   })
-
-
-  inline_policy {
-    policy = aws_iam_policy.apigateway.arn
-  }
-
-  inline_policy {
-    policy = aws_iam_policy.dynamodb.arn
-  }
-
-  inline_policy {
-    policy = aws_iam_policy.statemachine.arn
-  }
+  managed_policy_arns = [aws_iam_policy.apigateway.arn, aws_iam_policy.dynamodb.arn, aws_iam_policy.statemachine.arn]
 }
 
 # Policy for ping/pong
 resource "aws_iam_role" "machine" {
-  name = "serverless_example_lambda"
+  name = "subscriptionless-machine"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -93,26 +81,18 @@ resource "aws_iam_role" "machine" {
       },
     ]
   })
-
-
-  inline_policy {
-    policy = aws_iam_policy.apigateway.arn
-  }
-
-  inline_policy {
-    policy = aws_iam_policy.dynamodb.arn
-  }
+  managed_policy_arns = [aws_iam_policy.apigateway.arn, aws_iam_policy.dynamodb.arn]
 }
 
 # Policy for sns handler
 resource "aws_iam_role" "snsHandler" {
-  name = "serverless_example_lambda"
+  name = "subscriptionless-snsHandler"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
-        Action = "sts:AssumeRole"
         Effect = "Allow"
+        Action = "sts:AssumeRole"
         Principal = {
           Service = [
             "lambda.amazonaws.com"
@@ -121,12 +101,5 @@ resource "aws_iam_role" "snsHandler" {
       },
     ]
   })
-
-  inline_policy {
-    policy = aws_iam_policy.apigateway.arn
-  }
-
-  inline_policy {
-    policy = aws_iam_policy.dynamodb.arn
-  }
+  managed_policy_arns = [aws_iam_policy.apigateway.arn, aws_iam_policy.dynamodb.arn]
 }
