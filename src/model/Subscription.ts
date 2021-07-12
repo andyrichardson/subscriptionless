@@ -4,6 +4,7 @@ import {
   rangeKey,
 } from '@aws/dynamodb-data-mapper-annotations';
 import { APIGatewayEventRequestContext } from 'aws-lambda';
+import { addHours } from '../utils';
 
 /**
  * Active subscriptions
@@ -53,6 +54,6 @@ export class Subscription {
     operationName?: string | null;
   };
 
-  @attribute({ type: 'Number' })
-  ttl: number;
+  @attribute({ defaultProvider: () => addHours(new Date(), 3) })
+  ttl: Date;
 }
