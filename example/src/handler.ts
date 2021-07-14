@@ -26,7 +26,7 @@ const instance = createInstance({
   onError: console.error,
 });
 
-export const wsHandler = instance.handler;
+export const gatewayHandler = instance.gatewayHandler;
 
 export const snsHandler = (event) =>
   Promise.all(
@@ -38,4 +38,4 @@ export const snsHandler = (event) =>
     )
   );
 
-export const machine = instance.machine;
+export const stateMachineHandler = instance.stateMachineHandler;

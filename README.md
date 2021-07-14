@@ -54,7 +54,7 @@ const instance = createInstance({
 #### Export the handler.
 
 ```ts
-export const handler = instance.handler;
+export const gatewayHandler = instance.gatewayHandler;
 ```
 
 #### Configure API Gateway
@@ -68,7 +68,7 @@ Set up API Gateway to route WebSocket events to the exported handler.
 functions:
   websocket:
     name: my-subscription-lambda
-    handler: ./handler.handler
+    handler: ./handler.gatewayHandler
     events:
       - websocket:
           route: $connect
@@ -81,7 +81,70 @@ functions:
 </details>
 
 <details>
-  <summary>💾 terraform example (TODO)</summary>
+  <summary>💾 terraform example</summary>
+
+```tf
+resource "aws_apigatewayv2_api" "ws" {
+  name                       = "websocket-api"
+  protocol_type              = "WEBSOCKET"
+  route_selection_expression = "$request.body.action"
+}
+
+resource "aws_apigatewayv2_route" "default_route" {
+  api_id    = aws_apigatewayv2_api.ws.id
+  route_key = "$default"
+  target    = "integrations/${aws_apigatewayv2_integration.default_integration.id}"
+}
+
+resource "aws_apigatewayv2_route" "connect_route" {
+  api_id    = aws_apigatewayv2_api.ws.id
+  route_key = "$connect"
+  target    = "integrations/${aws_apigatewayv2_integration.default_integration.id}"
+}
+
+resource "aws_apigatewayv2_route" "disconnect_route" {
+  api_id    = aws_apigatewayv2_api.ws.id
+  route_key = "$disconnect"
+  target    = "integrations/${aws_apigatewayv2_integration.default_integration.id}"
+}
+
+resource "aws_apigatewayv2_integration" "default_integration" {
+  api_id           = aws_apigatewayv2_api.ws.id
+  integration_type = "AWS_PROXY"
+  integration_uri  = aws_lambda_function.gateway_handler.invoke_arn
+}
+
+resource "aws_lambda_permission" "apigateway_invoke_lambda" {
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.gateway_handler.function_name
+  principal     = "apigateway.amazonaws.com"
+}
+
+resource "aws_apigatewayv2_deployment" "ws" {
+  api_id = aws_apigatewayv2_api.ws.id
+
+  triggers = {
+    redeployment = sha1(join(",", tolist([
+      jsonencode(aws_apigatewayv2_integration.default_integration),
+      jsonencode(aws_apigatewayv2_route.default_route),
+      jsonencode(aws_apigatewayv2_route.connect_route),
+      jsonencode(aws_apigatewayv2_route.disconnect_route),
+    ])))
+  }
+
+  depends_on = [
+    aws_apigatewayv2_route.default_route,
+    aws_apigatewayv2_route.connect_route,
+    aws_apigatewayv2_route.disconnect_route
+  ]
+}
+
+resource "aws_apigatewayv2_stage" "ws" {
+  api_id        = aws_apigatewayv2_api.ws.id
+  name          = "example"
+  deployment_id = aws_apigatewayv2_deployment.ws.id
+}
+```
 
 </details>
 
@@ -271,10 +334,10 @@ const instance = createInstance({
 });
 ```
 
-Export the resulting instance ping handler for use in the state machine.
+Export the resulting handler for use by the state machine.
 
 ```ts
-export const machine = instance.machine;
+export const stateMachineHandler = instance.machine;
 ```
 
 </details>
@@ -288,7 +351,7 @@ Create a function which exports the aforementioned machine handler.
 ```yaml
 functions:
   machine:
-    handler: src/handler.machine
+    handler: src/handler.stateMachineHandler
 ```
 
 Use the [serverless-step-functions](https://github.com/serverless-operations/serverless-step-functions) plugin to create a state machine which invokes the machine handler.
@@ -329,7 +392,7 @@ The state machine _arn_ can be passed to your websocket handler function via out
 ```yaml
 functions:
   subscription:
-    handler: src/handler.wsHandler
+    handler: src/handler.gatewayHandler
     environment:
       PING_STATE_MACHINE_ARN: ${self:resources.Outputs.PingStateMachine.Value}
     # ...
@@ -364,10 +427,88 @@ The state machine itself will need the following permissions
     - execute-api:*
 ```
 
+> Note: For a full reproduction of these steps, see the example project.
+
 </details>
 
 <details>
-  <summary>💾 terraform example (TODO)</summary>
+  <summary>💾 terraform example</summary>
+
+Create a function which can be invoked by the state machine.
+
+```tf
+resource "aws_lambda_function" "machine" {
+  function_name    = "machine"
+  runtime          = "nodejs14.x"
+  filename         = data.archive_file.handler.output_path
+  source_code_hash = data.archive_file.handler.output_base64sha256
+  handler          = "example.stateMachineHandler"
+  role             = aws_iam_role.state_machine_function.arn
+
+  environment {
+    variables = {
+      CONNECTIONS_TABLE   = aws_dynamodb_table.connections.id
+      SUBSCRIPTIONS_TABLE = aws_dynamodb_table.subscriptions.id
+    }
+  }
+}
+```
+
+Create the following state machine which will be invoked by the gateway handler.
+
+```tf
+resource "aws_sfn_state_machine" "ping_state_machine" {
+  name     = "ping-state-machine"
+  role_arn = aws_iam_role.state_machine.arn
+  definition = jsonencode({
+    StartAt = "Wait"
+    States = {
+      Wait = {
+        Type        = "Wait"
+        SecondsPath = "$.seconds"
+        Next        = "Eval"
+      }
+      Eval = {
+        Type     = "Task"
+        Resource = aws_lambda_function.machine.arn
+        Next     = "Choose"
+      }
+      Choose = {
+        Type = "Choice"
+        Choices = [{
+          Not = {
+            Variable     = "$.state"
+            StringEquals = "ABORT"
+          }
+          Next = "Wait"
+        }]
+        Default = "End"
+      }
+      End = {
+        Type = "Pass"
+        End  = true
+      }
+    }
+  })
+}
+```
+
+The state machine _arn_ can be passed to your websocket handler via an environment variable.
+
+```tf
+resource "aws_lambda_function" "gateway_handler" {
+  # ...
+
+  environment {
+    variables = {
+      # ...
+      PING_STATE_MACHINE_ARN = aws_sfn_state_machine.ping_state_machine.arn
+    }
+  }
+}
+```
+
+> Note: For a full reproduction, along with IAM roles, see the example project.
 
 </details>
 

@@ -10,7 +10,7 @@ resource "aws_lambda_function" "gateway_handler" {
   runtime          = "nodejs14.x"
   filename         = data.archive_file.handler.output_path
   source_code_hash = data.archive_file.handler.output_base64sha256
-  handler          = "example.wsHandler"
+  handler          = "example.gatewayHandler"
   role             = aws_iam_role.gateway_handler.arn
 
   environment {
@@ -28,7 +28,7 @@ resource "aws_lambda_function" "machine" {
   runtime          = "nodejs14.x"
   filename         = data.archive_file.handler.output_path
   source_code_hash = data.archive_file.handler.output_base64sha256
-  handler          = "example.machine"
+  handler          = "example.stateMachineHandler"
   role             = aws_iam_role.state_machine_function.arn
 
   environment {

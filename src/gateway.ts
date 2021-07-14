@@ -10,7 +10,7 @@ import {
 } from './messages';
 import { pong } from './messages/pong';
 
-export const handleWebSocket = (
+export const handleGatewayEvent = (
   c: ServerClosure
 ): Handler<APIGatewayEvent, WebsocketResponse> => async (event) => {
   if (!event.requestContext) {

@@ -34,7 +34,7 @@ plugins:
 
 functions:
   subscription:
-    handler: src/handler.wsHandler
+    handler: src/handler.gatewayHandler
     environment:
       PING_STATE_MACHINE_ARN: ${self:resources.Outputs.PingStateMachine.Value}
     events:
@@ -53,7 +53,7 @@ functions:
 
   # Ping/pong functions
   machine:
-    handler: src/handler.machine
+    handler: src/handler.stateMachineHandler
 
 # Step function for server->client ping/pong (recommended)
 stepFunctions:
