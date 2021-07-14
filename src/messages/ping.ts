@@ -3,18 +3,17 @@ import { sendMessage, deleteConnection, promisify } from '../utils';
 import { MessageHandler } from './types';
 
 /** Handler function for 'ping' message. */
-export const ping: MessageHandler<PingMessage> = (c) => async ({
-  event,
-  message,
-}) => {
-  try {
-    await promisify(() => c.onPing?.({ event, message }));
-    return sendMessage({
-      ...event.requestContext,
-      message: { type: MessageType.Pong },
-    });
-  } catch (err) {
-    await promisify(() => c.onError?.(err, { event, message }));
-    await deleteConnection(event.requestContext);
-  }
-};
+export const ping: MessageHandler<PingMessage> =
+  (c) =>
+  async ({ event, message }) => {
+    try {
+      await promisify(() => c.onPing?.({ event, message }));
+      return sendMessage({
+        ...event.requestContext,
+        message: { type: MessageType.Pong },
+      });
+    } catch (err) {
+      await promisify(() => c.onError?.(err, { event, message }));
+      await deleteConnection(event.requestContext);
+    }
+  };

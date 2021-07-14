@@ -39,48 +39,48 @@ export const publish = (c: ServerClosure) => async (event: PubSubEvent) => {
   return await Promise.all(iters);
 };
 
-const getFilteredSubs = (c: Omit<ServerClosure, 'gateway'>) => async (
-  event: PubSubEvent
-): Promise<Subscription[]> => {
-  const flattenPayload = flatten(event.payload);
-  const iterator = c.mapper.query(
-    c.model.Subscription,
-    { topic: equals(event.topic) },
-    {
-      filter: {
-        type: 'And',
-        conditions: Object.entries(flattenPayload).reduce(
-          (p, [key, value]) => [
-            ...p,
-            {
-              type: 'Or',
-              conditions: [
-                {
-                  ...attributeNotExists(),
-                  subject: `filter.${key}`,
-                },
-                {
-                  ...equals(value),
-                  subject: `filter.${key}`,
-                },
-              ],
-            },
-          ],
-          [] as ConditionExpression[]
-        ),
-      },
-      indexName: 'TopicIndex',
+const getFilteredSubs =
+  (c: Omit<ServerClosure, 'gateway'>) =>
+  async (event: PubSubEvent): Promise<Subscription[]> => {
+    const flattenPayload = flatten(event.payload);
+    const iterator = c.mapper.query(
+      c.model.Subscription,
+      { topic: equals(event.topic) },
+      {
+        filter: {
+          type: 'And',
+          conditions: Object.entries(flattenPayload).reduce(
+            (p, [key, value]) => [
+              ...p,
+              {
+                type: 'Or',
+                conditions: [
+                  {
+                    ...attributeNotExists(),
+                    subject: `filter.${key}`,
+                  },
+                  {
+                    ...equals(value),
+                    subject: `filter.${key}`,
+                  },
+                ],
+              },
+            ],
+            [] as ConditionExpression[]
+          ),
+        },
+        indexName: 'TopicIndex',
+      }
+    );
+
+    // Aggregate all targets
+    const subs: Subscription[] = [];
+    for await (const sub of iterator) {
+      subs.push(sub);
     }
-  );
 
-  // Aggregate all targets
-  const subs: Subscription[] = [];
-  for await (const sub of iterator) {
-    subs.push(sub);
-  }
-
-  return subs;
-};
+    return subs;
+  };
 
 export const flatten = (
   obj: object
