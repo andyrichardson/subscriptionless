@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "deploy": "sls deploy",
-    "build": "microbundle src/handler.ts -f cjs --target node -o dist --external none"
+    "build": "microbundle src/handler.ts -f cjs --target node -o dist --external aws-sdk"
   },
   "author": "",
   "license": "ISC",

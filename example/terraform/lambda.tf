@@ -10,13 +10,14 @@ resource "aws_lambda_function" "wsHandler" {
   runtime          = "nodejs14.x"
   filename         = data.archive_file.handler.output_path
   source_code_hash = data.archive_file.handler.output_base64sha256
-  handler          = "exports.wsHandler"
+  handler          = "example.wsHandler"
   role             = aws_iam_role.wsHandler.arn
 
   environment {
     variables = {
-      SUBSCRIPTIONS_TABLE = aws_dynamodb_table.subscriptions.arn
-      CONNECTIONS_TABLE   = aws_dynamodb_table.connections.arn
+      CONNECTIONS_TABLE      = aws_dynamodb_table.connections.arn
+      SUBSCRIPTIONS_TABLE    = aws_dynamodb_table.subscriptions.arn
+      PING_STATE_MACHINE_ARN = aws_sfn_state_machine.ping_state_machine.arn
     }
   }
 }
@@ -27,13 +28,13 @@ resource "aws_lambda_function" "machine" {
   runtime          = "nodejs14.x"
   filename         = data.archive_file.handler.output_path
   source_code_hash = data.archive_file.handler.output_base64sha256
-  handler          = "exports.machine"
+  handler          = "example.machine"
   role             = aws_iam_role.machine.arn
 
   environment {
     variables = {
-      SUBSCRIPTIONS_TABLE = aws_dynamodb_table.subscriptions.arn
       CONNECTIONS_TABLE   = aws_dynamodb_table.connections.arn
+      SUBSCRIPTIONS_TABLE = aws_dynamodb_table.subscriptions.arn
     }
   }
 }
@@ -44,13 +45,13 @@ resource "aws_lambda_function" "snsHandler" {
   runtime          = "nodejs14.x"
   filename         = data.archive_file.handler.output_path
   source_code_hash = data.archive_file.handler.output_base64sha256
-  handler          = "exports.snsHandler"
+  handler          = "example.snsHandler"
   role             = aws_iam_role.snsHandler.arn
 
   environment {
     variables = {
-      SUBSCRIPTIONS_TABLE = aws_dynamodb_table.subscriptions.arn
       CONNECTIONS_TABLE   = aws_dynamodb_table.connections.arn
+      SUBSCRIPTIONS_TABLE = aws_dynamodb_table.subscriptions.arn
     }
   }
 }

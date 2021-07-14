@@ -28,6 +28,26 @@ resource "aws_iam_policy" "apigateway" {
   })
 }
 
+resource "aws_iam_policy" "lambda_logging" {
+  name = "lambda_logging_policy"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action   = ["logs:*"]
+        Effect   = "Allow"
+        Resource = ["arn:aws:logs:*:*:*"]
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "logging_attatchment" {
+  role       = aws_iam_role.wsHandler.name
+  policy_arn = aws_iam_policy.lambda_logging.arn
+}
+
+
 # Allow invocation of state machine
 resource "aws_iam_policy" "statemachine" {
   name = "subscriptionless-statemachine"
@@ -60,7 +80,12 @@ resource "aws_iam_role" "wsHandler" {
       },
     ]
   })
-  managed_policy_arns = [aws_iam_policy.apigateway.arn, aws_iam_policy.dynamodb.arn, aws_iam_policy.statemachine.arn]
+  managed_policy_arns = [
+    aws_iam_policy.apigateway.arn,
+    aws_iam_policy.dynamodb.arn,
+    aws_iam_policy.statemachine.arn,
+    aws_iam_policy.lambda_logging.arn
+  ]
 }
 
 # Policy for ping/pong
