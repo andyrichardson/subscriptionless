@@ -15,8 +15,8 @@ resource "aws_lambda_function" "wsHandler" {
 
   environment {
     variables = {
-      CONNECTIONS_TABLE      = aws_dynamodb_table.connections.arn
-      SUBSCRIPTIONS_TABLE    = aws_dynamodb_table.subscriptions.arn
+      CONNECTIONS_TABLE      = aws_dynamodb_table.connections.id
+      SUBSCRIPTIONS_TABLE    = aws_dynamodb_table.subscriptions.id
       PING_STATE_MACHINE_ARN = aws_sfn_state_machine.ping_state_machine.arn
     }
   }
@@ -33,8 +33,8 @@ resource "aws_lambda_function" "machine" {
 
   environment {
     variables = {
-      CONNECTIONS_TABLE   = aws_dynamodb_table.connections.arn
-      SUBSCRIPTIONS_TABLE = aws_dynamodb_table.subscriptions.arn
+      CONNECTIONS_TABLE   = aws_dynamodb_table.connections.id
+      SUBSCRIPTIONS_TABLE = aws_dynamodb_table.subscriptions.id
     }
   }
 }
@@ -50,8 +50,8 @@ resource "aws_lambda_function" "snsHandler" {
 
   environment {
     variables = {
-      CONNECTIONS_TABLE   = aws_dynamodb_table.connections.arn
-      SUBSCRIPTIONS_TABLE = aws_dynamodb_table.subscriptions.arn
+      CONNECTIONS_TABLE   = aws_dynamodb_table.connections.id
+      SUBSCRIPTIONS_TABLE = aws_dynamodb_table.subscriptions.id
     }
   }
 }

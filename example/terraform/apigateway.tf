@@ -1,7 +1,20 @@
+# Account-level throttle burst quota. Quota codes are identical across regions.
+# `aws service-quotas list-service-quotas --service apigateway`
+data "aws_servicequotas_service_quota" "throttling_burst_limit" {
+  service_code = "apigateway"
+  quota_code   = "L-CDF5615A"
+}
+# Account-level throttle rate quota. Quota codes are identical across regions.
+# `aws service-quotas list-service-quotas --service apigateway`
+data "aws_servicequotas_service_quota" "throttling_rate_limit" {
+  service_code = "apigateway"
+  quota_code   = "L-8A5B8E43"
+}
+
 resource "aws_apigatewayv2_api" "ws" {
   name                       = "websocket-api"
   protocol_type              = "WEBSOCKET"
-  route_selection_expression = "$request.body.message"
+  route_selection_expression = "$request.body.action"
 }
 
 resource "aws_apigatewayv2_route" "defaultRoute" {
@@ -23,10 +36,9 @@ resource "aws_apigatewayv2_route" "disconnectRoute" {
 }
 
 resource "aws_apigatewayv2_integration" "defaultIntegration" {
-  api_id             = aws_apigatewayv2_api.ws.id
-  integration_type   = "AWS_PROXY"
-  integration_uri    = aws_lambda_function.wsHandler.invoke_arn
-  integration_method = "POST"
+  api_id           = aws_apigatewayv2_api.ws.id
+  integration_type = "AWS_PROXY"
+  integration_uri  = aws_lambda_function.wsHandler.invoke_arn
 }
 
 resource "aws_lambda_permission" "apigateway_invoke_lambda" {
@@ -55,8 +67,17 @@ resource "aws_apigatewayv2_deployment" "ws" {
 }
 
 resource "aws_apigatewayv2_stage" "ws" {
-  api_id = aws_apigatewayv2_api.ws.id
-  name   = "example"
+  api_id        = aws_apigatewayv2_api.ws.id
+  name          = "example"
+  deployment_id = aws_apigatewayv2_deployment.ws.id
+
+  default_route_settings {
+    logging_level            = "INFO"
+    detailed_metrics_enabled = true
+    throttling_burst_limit   = coalesce(1000, data.aws_servicequotas_service_quota.throttling_burst_limit.value)
+    throttling_rate_limit    = coalesce(5000, data.aws_servicequotas_service_quota.throttling_rate_limit.value)
+  }
+
   access_log_settings {
     destination_arn = aws_cloudwatch_log_group.websocket_api.arn
     format = jsonencode({

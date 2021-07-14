@@ -5,9 +5,12 @@ resource "aws_iam_policy" "dynamodb" {
     Version = "2012-10-17"
     Statement = [
       {
-        Action   = ["dynamodb:*"]
-        Effect   = "Allow"
-        Resource = [aws_dynamodb_table.connections.arn, aws_dynamodb_table.subscriptions.arn]
+        Action = ["dynamodb:*"]
+        Effect = "Allow"
+        Resource = [
+          "${aws_dynamodb_table.connections.arn}*",
+          "${aws_dynamodb_table.subscriptions.arn}*"
+        ]
       }
     ]
   })
@@ -20,9 +23,12 @@ resource "aws_iam_policy" "apigateway" {
     Version = "2012-10-17"
     Statement = [
       {
-        Action   = ["execute-api:*"]
-        Effect   = "Allow"
-        Resource = [aws_apigatewayv2_api.ws.arn]
+        Action = ["execute-api:*"]
+        Effect = "Allow"
+        Resource = [
+          aws_apigatewayv2_api.ws.execution_arn,
+          "${aws_apigatewayv2_api.ws.execution_arn}/*"
+        ]
       }
     ]
   })
