@@ -337,7 +337,7 @@ const instance = createInstance({
 Export the resulting handler for use by the state machine.
 
 ```ts
-export const stateMachineHandler = instance.machine;
+export const stateMachineHandler = instance.stateMachineHandler;
 ```
 
 </details>
@@ -427,7 +427,7 @@ The state machine itself will need the following permissions
     - execute-api:*
 ```
 
-> Note: For a full reproduction of these steps, see the example project.
+> Note: For a full reproduction, see the example project.
 
 </details>
 
@@ -508,7 +508,7 @@ resource "aws_lambda_function" "gateway_handler" {
 }
 ```
 
-> Note: For a full reproduction, along with IAM roles, see the example project.
+> Note: For a full reproduction, see the example project.
 
 </details>
 
