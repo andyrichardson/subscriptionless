@@ -40,13 +40,13 @@
   },
   "homepage": "https://github.com/andyrichardson/subscriptionless#readme",
   "devDependencies": {
-    "@types/aws-lambda": "^8.10.72",
+    "@types/aws-lambda": "^8.10.78",
     "aws-sdk": "^2.844.0",
     "graphql": "^15.5.0",
     "graphql-ws": "^5.3.0",
-    "microbundle": "^0.13.0",
-    "prettier": "^2.2.1",
-    "typescript": "^4.1.5"
+    "microbundle": "^0.13.3",
+    "prettier": "^2.3.2",
+    "typescript": "^4.3.5"
   },
   "dependencies": {
     "@aws/dynamodb-data-mapper": "^0.7.3",
