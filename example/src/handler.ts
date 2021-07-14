@@ -12,6 +12,11 @@ const instance = createInstance({
   dynamodb: new DynamoDB({
     logger: console,
   }),
+  pingpong: {
+    machine: process.env.PING_STATE_MACHINE_ARN!,
+    delay: 10,
+    timeout: 30,
+  },
   tableNames: {
     connections: process.env.CONNECTIONS_TABLE,
     subscriptions: process.env.SUBSCRIPTIONS_TABLE,
@@ -21,7 +26,7 @@ const instance = createInstance({
   onError: console.error,
 });
 
-export const wsHandler = instance.handler;
+export const gatewayHandler = instance.gatewayHandler;
 
 export const snsHandler = (event) =>
   Promise.all(
@@ -32,3 +37,5 @@ export const snsHandler = (event) =>
       })
     )
   );
+
+export const stateMachineHandler = instance.stateMachineHandler;

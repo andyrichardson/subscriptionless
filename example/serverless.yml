@@ -3,27 +3,40 @@ provider:
   name: aws
   stage: dev
   runtime: nodejs14.x
-  iamRoleStatements:
-    - Effect: Allow
-      Action:
-        - dynamodb:Query
-        - dynamodb:Scan
-        - dynamodb:GetItem
-        - dynamodb:PutItem
-        - dynamodb:DeleteItem
-      Resource: '*'
-    - Effect: Allow
-      Action:
-        - execute-api:*
-      Resource: '*'
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action: dynamodb:*
+          Resource:
+            - !GetAtt ConnectionsTable.Arn
+            - !GetAtt SubscriptionsTable.Arn
+        - Effect: Allow
+          Action: execute-api:*
+          Resource:
+            - !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebsocketsApi}/*'
+        - Effect: Allow
+          Action: states:StartExecution
+          Resource:
+            - !Sub 'arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:PingStepFunctionsStateMachine-*'
+        - Effect: Allow
+          Resource:
+            - !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${self:service}-${self:provider.stage}-machine'
+          Action:
+            - lambda:InvokeFunction
   environment:
     SUBSCRIPTIONS_TABLE: subscriptions
     CONNECTIONS_TABLE: connections
+
 plugins:
   - serverless-plugin-typescript
+  - serverless-step-functions
+
 functions:
   subscription:
-    handler: src/handler.wsHandler
+    handler: src/handler.gatewayHandler
+    environment:
+      PING_STATE_MACHINE_ARN: ${self:resources.Outputs.PingStateMachine.Value}
     events:
       - websocket:
           route: $connect
@@ -31,14 +44,53 @@ functions:
           route: $disconnect
       - websocket:
           route: $default
+
+  # Example push-based event
   snsEvent:
     handler: src/handler.snsHandler
     events:
       - sns: NEW_ARTICLE
+
+  # Ping/pong functions
+  machine:
+    handler: src/handler.stateMachineHandler
+
+# Step function for server->client ping/pong (recommended)
+stepFunctions:
+  stateMachines:
+    ping:
+      role: !GetAtt IamRoleLambdaExecution.Arn
+      events:
+        - websocket:
+            route: $connect
+      definition:
+        Comment: 'An example of the Amazon States Language using wait states'
+        StartAt: Wait
+        States:
+          Eval:
+            Type: Task
+            Resource: !GetAtt machine.Arn
+            Next: Choose
+          Wait:
+            Type: Wait
+            SecondsPath: '$.seconds'
+            Next: Eval
+          Choose:
+            Type: Choice
+            Choices:
+              - Not:
+                  Variable: '$.state'
+                  StringEquals: 'ABORT'
+                Next: Wait
+            Default: End
+          End:
+            Type: Pass
+            End: true
+
 resources:
   Resources:
     # Table for tracking connections
-    connectionsTable:
+    ConnectionsTable:
       Type: AWS::DynamoDB::Table
       Properties:
         TableName: ${self:provider.environment.CONNECTIONS_TABLE}
@@ -52,7 +104,7 @@ resources:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
     # Table for tracking subscriptions
-    subscriptionsTable:
+    SubscriptionsTable:
       Type: AWS::DynamoDB::Table
       Properties:
         TableName: ${self:provider.environment.SUBSCRIPTIONS_TABLE}
@@ -90,3 +142,28 @@ resources:
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
+
+  extensions:
+    PingStepFunctionsStateMachine:
+      Properties:
+        RoleArn: !GetAtt IamRoleLambdaExecution.Arn
+      DependsOn:
+        - IamRoleLambdaExecution
+
+    IamRoleLambdaExecution:
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - lambda.amazonaws.com
+                  - states.amazonaws.com
+              Action:
+                - sts:AssumeRole
+
+  Outputs:
+    PingStateMachine:
+      Value:
+        Ref: PingStepFunctionsStateMachine

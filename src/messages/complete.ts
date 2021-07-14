@@ -9,6 +9,7 @@ import {
 } from '../utils';
 import { MessageHandler } from './types';
 
+/** Handler function for 'complete' message. */
 export const complete: MessageHandler<CompleteMessage> = (c) => async ({
   event,
   message,

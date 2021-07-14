@@ -4,20 +4,23 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "deploy": "sls deploy"
+    "deploy": "sls deploy",
+    "build": "microbundle src/handler.ts -f cjs --target node -o dist --external aws-sdk"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "serverless": "^2.29.0",
+    "microbundle": "^0.13.3",
+    "serverless": "^2.48.0",
     "serverless-plugin-typescript": "^1.1.9",
-    "typescript": "^4.2.3"
+    "serverless-step-functions": "^2.30.0",
+    "typescript": "^4.3.4"
   },
   "dependencies": {
-    "@graphql-tools/schema": "^7.1.3",
-    "aws-sdk": "^2.859.0",
-    "graphql": "^15.5.0",
-    "graphql-tag": "^2.11.0",
+    "@graphql-tools/schema": "^7.1.5",
+    "aws-sdk": "^2.935.0",
+    "graphql": "^15.5.1",
+    "graphql-tag": "^2.12.5",
     "subscriptionless": "latest"
   }
 }

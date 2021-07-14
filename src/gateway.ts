@@ -1,9 +1,16 @@
 import { Handler, APIGatewayEvent } from 'aws-lambda';
 import { GRAPHQL_TRANSPORT_WS_PROTOCOL, MessageType } from 'graphql-ws';
 import { ServerClosure, WebsocketResponse } from './types';
-import { complete, connection_init, subscribe, disconnect } from './messages';
+import {
+  complete,
+  connection_init,
+  subscribe,
+  disconnect,
+  ping,
+} from './messages';
+import { pong } from './messages/pong';
 
-export const handleWebSocket = (
+export const handleGatewayEvent = (
   c: ServerClosure
 ): Handler<APIGatewayEvent, WebsocketResponse> => async (event) => {
   if (!event.requestContext) {
@@ -45,6 +52,22 @@ export const handleWebSocket = (
 
     if (message.type === MessageType.Complete) {
       await complete(c)({ event, message });
+      return {
+        statusCode: 200,
+        body: '',
+      };
+    }
+
+    if (message.type === MessageType.Ping) {
+      await ping(c)({ event, message });
+      return {
+        statusCode: 200,
+        body: '',
+      };
+    }
+
+    if (message.type === MessageType.Pong) {
+      await pong(c)({ event, message });
       return {
         statusCode: 200,
         body: '',

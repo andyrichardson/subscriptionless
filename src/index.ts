@@ -1,9 +1,9 @@
 import { DataMapper } from '@aws/dynamodb-data-mapper';
-import { Handler } from 'aws-lambda';
 import { ServerArgs } from './types';
-import { handleWebSocket } from './websocket';
 import { publish } from './pubsub/publish';
 import { createModel, Connection, Subscription } from './model';
+import { handleGatewayEvent } from './gateway';
+import { handleStateMachineEvent } from './stepFunctionHandler';
 
 export const createInstance = (opts: ServerArgs) => {
   const closure = {
@@ -22,10 +22,9 @@ export const createInstance = (opts: ServerArgs) => {
     mapper: new DataMapper({ client: opts.dynamodb }),
   } as const;
 
-  const handler: Handler = (...args) => handleWebSocket(closure)(...args);
-
   return {
-    handler,
+    gatewayHandler: handleGatewayEvent(closure),
+    stateMachineHandler: handleStateMachineEvent(closure),
     publish: publish(closure),
   };
 };
