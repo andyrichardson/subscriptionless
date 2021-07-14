@@ -5,13 +5,13 @@ data "archive_file" "handler" {
 }
 
 # Lambda for handling websocket events
-resource "aws_lambda_function" "wsHandler" {
-  function_name    = "wsHandler"
+resource "aws_lambda_function" "gateway_handler" {
+  function_name    = "subscriptionless_gateway_event_handler"
   runtime          = "nodejs14.x"
   filename         = data.archive_file.handler.output_path
   source_code_hash = data.archive_file.handler.output_base64sha256
   handler          = "example.wsHandler"
-  role             = aws_iam_role.wsHandler.arn
+  role             = aws_iam_role.gateway_handler.arn
 
   environment {
     variables = {
@@ -29,7 +29,7 @@ resource "aws_lambda_function" "machine" {
   filename         = data.archive_file.handler.output_path
   source_code_hash = data.archive_file.handler.output_base64sha256
   handler          = "example.machine"
-  role             = aws_iam_role.machine.arn
+  role             = aws_iam_role.state_machine_function.arn
 
   environment {
     variables = {

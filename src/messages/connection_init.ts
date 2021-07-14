@@ -14,24 +14,22 @@ export const connection_init: MessageHandler<ConnectionInitMessage> = (
       ? await promisify(() => c.onConnectionInit!({ event, message }))
       : message.payload;
 
-    const pingerInvocation = c.pingpong
-      ? (
-          await new StepFunctions()
-            .startExecution({
-              stateMachineArn: c.pingpong.machine,
-              name: event.requestContext.connectionId!,
-              input: JSON.stringify({
-                connectionId: event.requestContext.connectionId!,
-                domainName: event.requestContext.domainName!,
-                stage: event.requestContext.stage,
-                state: 'PING',
-                choice: 'WAIT',
-                seconds: c.pingpong.delay,
-              } as StateFunctionInput),
-            })
-            .promise()
-        ).executionArn
-      : undefined;
+    if (c.pingpong) {
+      await new StepFunctions()
+        .startExecution({
+          stateMachineArn: c.pingpong.machine,
+          name: event.requestContext.connectionId!,
+          input: JSON.stringify({
+            connectionId: event.requestContext.connectionId!,
+            domainName: event.requestContext.domainName!,
+            stage: event.requestContext.stage,
+            state: 'PING',
+            choice: 'WAIT',
+            seconds: c.pingpong.delay,
+          } as StateFunctionInput),
+        })
+        .promise();
+    }
 
     // Write to persistence
     const connection = assign(new c.model.Connection(), {

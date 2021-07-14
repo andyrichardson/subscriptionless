@@ -1,6 +1,6 @@
 resource "aws_sfn_state_machine" "ping_state_machine" {
   name     = "ping-state-machine"
-  role_arn = aws_iam_role.machine.arn
+  role_arn = aws_iam_role.state_machine.arn
   definition = jsonencode({
     StartAt = "Wait"
     States = {

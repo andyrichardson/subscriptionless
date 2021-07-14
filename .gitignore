@@ -2,3 +2,5 @@ node_modules
 dist
 example/.serverless
 example/package-lock.json
+example/terraform/.*
+*.tfstate*

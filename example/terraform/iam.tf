@@ -1,6 +1,6 @@
 # Allow DB access
 resource "aws_iam_policy" "dynamodb" {
-  name = "subscriptionless-dynamodb"
+  name = "subscriptionless_dynamodb"
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -18,7 +18,7 @@ resource "aws_iam_policy" "dynamodb" {
 
 # Allow WebSocket API access
 resource "aws_iam_policy" "apigateway" {
-  name = "subscriptionless-apigateway"
+  name = "subscriptionless_apigateway"
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -35,7 +35,7 @@ resource "aws_iam_policy" "apigateway" {
 }
 
 resource "aws_iam_policy" "lambda_logging" {
-  name = "lambda_logging_policy"
+  name = "subscriptionless_lambda_logging"
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -48,30 +48,39 @@ resource "aws_iam_policy" "lambda_logging" {
   })
 }
 
-resource "aws_iam_role_policy_attachment" "logging_attatchment" {
-  role       = aws_iam_role.wsHandler.name
-  policy_arn = aws_iam_policy.lambda_logging.arn
-}
-
-
 # Allow invocation of state machine
-resource "aws_iam_policy" "statemachine" {
-  name = "subscriptionless-statemachine"
+resource "aws_iam_policy" "state_machine_invoke" {
+  name = "subscriptionless_state_machine_invoke"
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
-        Action   = ["states:StartExecution"]
+        Action = ["states:StartExecution"]
+        Effect = "Allow"
+        Resource = [
+          aws_sfn_state_machine.ping_state_machine.arn
+        ]
+      },
+    ]
+  })
+}
+resource "aws_iam_policy" "state_machine_lambda_invoke" {
+  name = "subscriptionless_state_machine_lambda_invoke"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action   = ["lambda:InvokeFunction"]
         Effect   = "Allow"
-        Resource = [aws_sfn_state_machine.ping_state_machine.arn]
-      }
+        Resource = [aws_lambda_function.machine.arn]
+      },
     ]
   })
 }
 
 # Policy for ws handler
-resource "aws_iam_role" "wsHandler" {
-  name = "subscriptionless-wsHandler"
+resource "aws_iam_role" "gateway_handler" {
+  name = "subscriptionless_gateway_handler"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -89,14 +98,35 @@ resource "aws_iam_role" "wsHandler" {
   managed_policy_arns = [
     aws_iam_policy.apigateway.arn,
     aws_iam_policy.dynamodb.arn,
-    aws_iam_policy.statemachine.arn,
+    aws_iam_policy.state_machine_invoke.arn,
     aws_iam_policy.lambda_logging.arn
   ]
 }
 
 # Policy for ping/pong
-resource "aws_iam_role" "machine" {
-  name = "subscriptionless-machine"
+resource "aws_iam_role" "state_machine" {
+  name = "subscriptionless_state_machine"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = [
+            "states.amazonaws.com"
+          ]
+        }
+      },
+    ]
+  })
+  managed_policy_arns = [
+    aws_iam_policy.state_machine_lambda_invoke.arn
+  ]
+}
+
+resource "aws_iam_role" "state_machine_function" {
+  name = "subscriptionless_state_machine_function"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -106,14 +136,17 @@ resource "aws_iam_role" "machine" {
         Principal = {
           Service = [
             "lambda.amazonaws.com",
-            "states.amazonaws.com"
           ]
         }
       },
     ]
   })
-  managed_policy_arns = [aws_iam_policy.apigateway.arn, aws_iam_policy.dynamodb.arn]
+  managed_policy_arns = [
+    aws_iam_policy.apigateway.arn,
+    aws_iam_policy.dynamodb.arn
+  ]
 }
+
 
 # Policy for sns handler
 resource "aws_iam_role" "snsHandler" {
@@ -132,5 +165,8 @@ resource "aws_iam_role" "snsHandler" {
       },
     ]
   })
-  managed_policy_arns = [aws_iam_policy.apigateway.arn, aws_iam_policy.dynamodb.arn]
+  managed_policy_arns = [
+    aws_iam_policy.apigateway.arn,
+    aws_iam_policy.dynamodb.arn
+  ]
 }
