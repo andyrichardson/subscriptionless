@@ -12,9 +12,9 @@ Seriously, **read this first** before you even think about using this.
 
 <details>
   
-<summary>This is in alpha</summary>
+<summary>This is in beta</summary>
 
-This is Alpha software and should be treated as such.
+This is beta and should be treated as such.
 
 </details>
 
