@@ -1,5 +1,5 @@
 import { attribute, hashKey } from '@aws/dynamodb-data-mapper-annotations';
-import { APIGatewayWebSocketEvent } from '../types';
+import { APIGatewayWebSocketRequestContext } from '../types';
 import { addHours } from '../utils';
 
 
@@ -17,7 +17,7 @@ export class Connection {
 
   /** Request context from $connect event */
   @attribute()
-  requestContext: APIGatewayWebSocketEvent['requestContext'];
+  requestContext: APIGatewayWebSocketRequestContext;
 
   /** connection_init payload (post-parse) */
   @attribute()
