@@ -38,12 +38,12 @@ export const connection_init: MessageHandler<ConnectionInitMessage> =
         payload: res,
       });
       await c.mapper.put(connection);
-      return sendMessage(c, {
+      return sendMessage(c)({
         ...event.requestContext,
         message: { type: MessageType.ConnectionAck },
       });
     } catch (err) {
       await promisify(() => c.onError?.(err, { event, message }));
-      await deleteConnection(c, event.requestContext);
+      await deleteConnection(c)(event.requestContext);
     }
   };

@@ -9,9 +9,9 @@ import {
 } from 'graphql-ws';
 import { ServerClosure, APIGatewayWebSocketRequestContext } from '../types';
 
-export const sendMessage = async (
-  c: ServerClosure,
-  {
+export const sendMessage =
+  (c: ServerClosure) =>
+  async ({
     connectionId: ConnectionId,
     domainName,
     stage,
@@ -27,40 +27,38 @@ export const sendMessage = async (
   } & Pick<
     APIGatewayWebSocketRequestContext,
     'connectionId' | 'domainName' | 'stage'
-  >
-): Promise<void> => {
-  const api =
-    c.apiGatewayManagementApi ??
-    new ApiGatewayManagementApi({
-      apiVersion: 'latest',
-      endpoint: `${domainName}/${stage}`,
-    });
+  >): Promise<void> => {
+    const api =
+      c.apiGatewayManagementApi ??
+      new ApiGatewayManagementApi({
+        apiVersion: 'latest',
+        endpoint: `${domainName}/${stage}`,
+      });
 
-  await api
-    .postToConnection({
-      ConnectionId,
-      Data: JSON.stringify(message),
-    })
-    .promise();
-};
+    await api
+      .postToConnection({
+        ConnectionId,
+        Data: JSON.stringify(message),
+      })
+      .promise();
+  };
 
-export const deleteConnection = async (
-  c: ServerClosure,
-  {
+export const deleteConnection =
+  (c: ServerClosure) =>
+  async ({
     connectionId: ConnectionId,
     domainName,
     stage,
   }: Pick<
     APIGatewayWebSocketRequestContext,
     'connectionId' | 'domainName' | 'stage'
-  >
-): Promise<void> => {
-  const api =
-    c.apiGatewayManagementApi ??
-    new ApiGatewayManagementApi({
-      apiVersion: 'latest',
-      endpoint: `${domainName}/${stage}`,
-    });
+  >): Promise<void> => {
+    const api =
+      c.apiGatewayManagementApi ??
+      new ApiGatewayManagementApi({
+        apiVersion: 'latest',
+        endpoint: `${domainName}/${stage}`,
+      });
 
-  await api.deleteConnection({ ConnectionId }).promise();
-};
+    await api.deleteConnection({ ConnectionId }).promise();
+  };

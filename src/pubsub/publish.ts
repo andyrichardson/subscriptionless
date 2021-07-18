@@ -27,7 +27,7 @@ export const publish = (c: ServerClosure) => async (event: PubSubEvent) => {
       undefined
     );
 
-    await sendMessage(c, {
+    await sendMessage(c)({
       ...sub.requestContext,
       message: {
         id: sub.subscriptionId,
