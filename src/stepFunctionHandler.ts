@@ -12,7 +12,7 @@ export const handleStateMachineEvent =
 
     // Initial state - send ping message
     if (input.state === 'PING') {
-      await sendMessage({ ...input, message: { type: MessageType.Ping } });
+      await sendMessage(c)({ ...input, message: { type: MessageType.Ping } });
       await c.mapper.update(assign(connection, { hasPonged: false }), {
         onMissing: 'skip',
       });
@@ -33,7 +33,7 @@ export const handleStateMachineEvent =
       };
     }
 
-    await deleteConnection({ ...input });
+    await deleteConnection(c)({ ...input });
     return {
       ...input,
       state: 'ABORT',

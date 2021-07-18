@@ -20,6 +20,6 @@ export const pong: MessageHandler<PongMessage> =
       );
     } catch (err) {
       await promisify(() => c.onError?.(err, { event, message }));
-      await deleteConnection(event.requestContext);
+      await deleteConnection(c)(event.requestContext);
     }
   };

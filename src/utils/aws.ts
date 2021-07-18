@@ -1,5 +1,4 @@
 import { ApiGatewayManagementApi } from 'aws-sdk';
-import { APIGatewayEventRequestContext } from 'aws-lambda';
 import {
   ConnectionAckMessage,
   NextMessage,
@@ -8,9 +7,16 @@ import {
   PingMessage,
   PongMessage,
 } from 'graphql-ws';
+import { ServerClosure, APIGatewayWebSocketRequestContext } from '../types';
 
-export const sendMessage = (
-  a: {
+export const sendMessage =
+  (c: ServerClosure) =>
+  async ({
+    connectionId: ConnectionId,
+    domainName,
+    stage,
+    message,
+  }: {
     message:
       | ConnectionAckMessage
       | NextMessage
@@ -19,29 +25,40 @@ export const sendMessage = (
       | PingMessage
       | PongMessage;
   } & Pick<
-    APIGatewayEventRequestContext,
+    APIGatewayWebSocketRequestContext,
     'connectionId' | 'domainName' | 'stage'
-  >
-) =>
-  new ApiGatewayManagementApi({
-    apiVersion: 'latest',
-    endpoint: `${a.domainName}/${a.stage}`,
-  })
-    .postToConnection({
-      ConnectionId: a.connectionId!,
-      Data: JSON.stringify(a.message),
-    })
-    .promise();
+  >): Promise<void> => {
+    const api =
+      c.apiGatewayManagementApi ??
+      new ApiGatewayManagementApi({
+        apiVersion: 'latest',
+        endpoint: `${domainName}/${stage}`,
+      });
 
-export const deleteConnection = (
-  a: Pick<
-    APIGatewayEventRequestContext,
+    await api
+      .postToConnection({
+        ConnectionId,
+        Data: JSON.stringify(message),
+      })
+      .promise();
+  };
+
+export const deleteConnection =
+  (c: ServerClosure) =>
+  async ({
+    connectionId: ConnectionId,
+    domainName,
+    stage,
+  }: Pick<
+    APIGatewayWebSocketRequestContext,
     'connectionId' | 'domainName' | 'stage'
-  >
-) =>
-  new ApiGatewayManagementApi({
-    apiVersion: 'latest',
-    endpoint: `${a.domainName}/${a.stage}`,
-  })
-    .deleteConnection({ ConnectionId: a.connectionId! })
-    .promise();
+  >): Promise<void> => {
+    const api =
+      c.apiGatewayManagementApi ??
+      new ApiGatewayManagementApi({
+        apiVersion: 'latest',
+        endpoint: `${domainName}/${stage}`,
+      });
+
+    await api.deleteConnection({ ConnectionId }).promise();
+  };

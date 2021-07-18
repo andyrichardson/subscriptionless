@@ -8,12 +8,12 @@ export const ping: MessageHandler<PingMessage> =
   async ({ event, message }) => {
     try {
       await promisify(() => c.onPing?.({ event, message }));
-      return sendMessage({
+      return sendMessage(c)({
         ...event.requestContext,
         message: { type: MessageType.Pong },
       });
     } catch (err) {
       await promisify(() => c.onError?.(err, { event, message }));
-      await deleteConnection(event.requestContext);
+      await deleteConnection(c)(event.requestContext);
     }
   };

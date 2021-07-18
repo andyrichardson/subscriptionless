@@ -6,14 +6,18 @@ import {
   PongMessage,
 } from 'graphql-ws';
 import { DataMapper } from '@aws/dynamodb-data-mapper';
-import { APIGatewayEvent } from 'aws-lambda';
+import {
+  APIGatewayEventRequestContext,
+  APIGatewayProxyEvent,
+} from 'aws-lambda';
 import { GraphQLSchema } from 'graphql';
-import { DynamoDB, StepFunctions } from 'aws-sdk';
+import { ApiGatewayManagementApi, DynamoDB, StepFunctions } from 'aws-sdk';
 import { Subscription, Connection } from './model';
 
 export type ServerArgs = {
   schema: GraphQLSchema;
   dynamodb: DynamoDB;
+  apiGatewayManagementApi?: ApiGatewayManagementApi;
   context?: ((arg: { connectionParams: any }) => object) | object;
   tableNames?: Partial<TableNames>;
   pingpong?: {
@@ -21,27 +25,27 @@ export type ServerArgs = {
     delay: number;
     timeout: number;
   };
-  onConnect?: (e: { event: APIGatewayEvent }) => MaybePromise<void>;
-  onDisconnect?: (e: { event: APIGatewayEvent }) => MaybePromise<void>;
+  onConnect?: (e: { event: APIGatewayWebSocketEvent }) => MaybePromise<void>;
+  onDisconnect?: (e: { event: APIGatewayWebSocketEvent }) => MaybePromise<void>;
   /* Takes connection_init event and returns payload to be persisted (may include auth steps) */
   onConnectionInit?: (e: {
-    event: APIGatewayEvent;
+    event: APIGatewayWebSocketEvent;
     message: ConnectionInitMessage;
   }) => MaybePromise<object>;
   onSubscribe?: (e: {
-    event: APIGatewayEvent;
+    event: APIGatewayWebSocketEvent;
     message: SubscribeMessage;
   }) => MaybePromise<void>;
   onComplete?: (e: {
-    event: APIGatewayEvent;
+    event: APIGatewayWebSocketEvent;
     message: CompleteMessage;
   }) => MaybePromise<void>;
   onPing?: (e: {
-    event: APIGatewayEvent;
+    event: APIGatewayWebSocketEvent;
     message: PingMessage;
   }) => MaybePromise<void>;
   onPong?: (e: {
-    event: APIGatewayEvent;
+    event: APIGatewayWebSocketEvent;
     message: PongMessage;
   }) => MaybePromise<void>;
   onError?: (error: any, context: any) => void;
@@ -91,3 +95,13 @@ export type StateFunctionInput = {
   state: 'PING' | 'REVIEW' | 'ABORT';
   seconds: number;
 };
+
+export interface APIGatewayWebSocketRequestContext
+  extends APIGatewayEventRequestContext {
+  connectionId: string;
+  domainName: string;
+}
+
+export interface APIGatewayWebSocketEvent extends APIGatewayProxyEvent {
+  requestContext: APIGatewayWebSocketRequestContext;
+}
