@@ -2,7 +2,6 @@ import { attribute, hashKey } from '@aws/dynamodb-data-mapper-annotations';
 import { APIGatewayWebSocketRequestContext } from '../types';
 import { addHours } from '../utils';
 
-
 /**
  * Connection established with `connection_init`
  */

@@ -96,9 +96,10 @@ export type StateFunctionInput = {
   seconds: number;
 };
 
-export interface APIGatewayWebSocketRequestContext extends APIGatewayEventRequestContext {
-  connectionId: string
-  domainName: string
+export interface APIGatewayWebSocketRequestContext
+  extends APIGatewayEventRequestContext {
+  connectionId: string;
+  domainName: string;
 }
 
 export interface APIGatewayWebSocketEvent extends APIGatewayProxyEvent {

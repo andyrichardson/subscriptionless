@@ -25,7 +25,7 @@ export const sendMessage = async (
       | PingMessage
       | PongMessage;
   } & Pick<
-  APIGatewayWebSocketRequestContext,
+    APIGatewayWebSocketRequestContext,
     'connectionId' | 'domainName' | 'stage'
   >
 ): Promise<void> => {
