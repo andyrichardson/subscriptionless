@@ -1,5 +1,5 @@
 import { SubscribeMessage, MessageType } from 'graphql-ws';
-import { validate, parse } from 'graphql';
+import { validate, parse, GraphQLError } from 'graphql';
 import {
   buildExecutionContext,
   assertValidExecutionArguments,
@@ -30,11 +30,18 @@ export const subscribe: MessageHandler<SubscribeMessage> =
       ]);
       const connectionParams = connection.payload || {};
 
-      // Check for variable errors
+      // GraphQL validation
       const errors = validateMessage(c)(message);
 
       if (errors) {
-        throw errors;
+        return sendMessage({
+          ...event.requestContext,
+          message: {
+            type: MessageType.Error,
+            id: message.id,
+            payload: errors,
+          },
+        });
       }
 
       const execContext = buildExecutionContext(
@@ -115,6 +122,6 @@ const validateMessage = (c: ServerClosure) => (message: SubscribeMessage) => {
       message.payload.variables
     );
   } catch (err) {
-    return [err];
+    return [err] as GraphQLError[];
   }
 };
