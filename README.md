@@ -12,9 +12,9 @@ Seriously, **read this first** before you even think about using this.
 
 <details>
   
-<summary>This is in alpha</summary>
+<summary>This is in beta</summary>
 
-This is Alpha software and should be treated as such.
+This is Beta software and should be treated as such.
 
 </details>
 
@@ -26,9 +26,11 @@ There are a few noteworthy limitations to the AWS API Gateway WebSocket implemen
 
 > Note: If you work on AWS and want to run through this, hit me up!
 
-#### Ping/Pong
+#### Socket timeouts
 
-Use of this library without ping/pong is strongly discouraged [(see here)](https://github.com/andyrichardson/subscriptionless/issues/3)
+Default socket idleness [detection in API Gateway is unpredictable](https://github.com/andyrichardson/subscriptionless/issues/3).
+
+It is strongly recommended to use socket idleness detection [listed here](#configure-idleness-detection-pingpong). Alternatively, client->server pinging can be used to keep a connection alive.
 
 #### Socket errors
 
@@ -46,7 +48,6 @@ Because of this limitation, there is no clear way to communicate subprotocol err
 import { createInstance } from 'subscriptionless';
 
 const instance = createInstance({
-  dynamodb,
   schema,
 });
 ```
@@ -311,25 +312,25 @@ resource "aws_dynamodb_table" "subscriptions-table" {
 
 </details>
 
-#### Configure ping/pong
+#### Configure idleness detection (ping/pong)
 
-Set up server->client ping/pong for idleness detection.
+Set up server->client pinging for socket idleness detection.
 
-> Note: While not a hard requirement, this, or client->server ping/pong, is [strongly recommended](https://github.com/andyrichardson/subscriptionless/issues/3)
+> Note: While not a hard requirement, this is [strongly recommended](#%EF%B8%8F-limitations).
 
 <details>
 
 <summary>📖 Configuring instance</summary>
 
-Pass a `pingpong` argument to configure delays and what state machine to invoke.
+Pass a `ping` argument to configure delays and what state machine to invoke.
 
 ```ts
 const instance = createInstance({
   /* ... */
-  pingpong: {
-    delay: 10, // Time to wait before sending a ping (seconds)
-    timeout: 30, // Threshold for a pong response following a ping (seconds)
-    machine: process.env.MACHINE_ARN, // State machine to invoke
+  ping: {
+    interval: 60, // Rate in seconds to send ping message
+    timeout: 30, // Threshold for pong response before closing socket
+    machineArn: process.env.MACHINE_ARN, // State machine to invoke
   },
 });
 ```
@@ -735,7 +736,7 @@ Global events can be provided when calling `createInstance` to track the executi
   
 <summary>📖 Connect (onConnect)</summary>
 
-Called when a WebSocket connection is first established.
+Called on an incoming API Gateway `$connect` event.
 
 ```ts
 const instance = createInstance({
@@ -752,7 +753,7 @@ const instance = createInstance({
   
 <summary>📖 Disconnect (onDisconnect)</summary>
 
-Called when a WebSocket connection is disconnected.
+Called on an incoming API Gateway `$disconnect` event.
 
 ```ts
 const instance = createInstance({
@@ -768,6 +769,8 @@ const instance = createInstance({
 <details>
   
 <summary>📖 Authorization (connection_init)</summary>
+
+Called on incoming graphql-ws `connection_init` message.
 
 `onConnectionInit` can be used to verify the `connection_init` payload prior to persistence.
 
@@ -802,7 +805,7 @@ By default, the (optionally parsed) payload will be accessible via [context](#co
 
 #### Subscribe (onSubscribe)
 
-Called when any subscription message is received.
+Called on incoming graphql-ws `subscribe` message.
 
 ```ts
 const instance = createInstance({
@@ -819,7 +822,7 @@ const instance = createInstance({
   
 <summary>📖 Complete (onComplete)</summary>
 
-Called when any complete message is received.
+Called on graphql-ws `complete` message.
 
 ```ts
 const instance = createInstance({
@@ -834,9 +837,45 @@ const instance = createInstance({
 
 <details>
   
+<summary>📖 Ping (onPing)</summary>
+
+Called on incoming graphql-ws `ping` message.
+
+```ts
+const instance = createInstance({
+  /* ... */
+  onPing: ({ event, message }) => {
+    /* */
+  },
+});
+```
+
+</details>
+
+<details>
+
+<details>
+  
+<summary>📖 Ping (onPong)</summary>
+
+Called on incoming graphql-ws `pong` message.
+
+```ts
+const instance = createInstance({
+  /* ... */
+  onPong: ({ event, message }) => {
+    /* */
+  },
+});
+```
+
+</details>
+
+<details>
+
 <summary>📖 Error (onError)</summary>
 
-Called when any error is encountered
+Called on unexpected errors during resolution of API Gateway or graphql-ws events.
 
 ```ts
 const instance = createInstance({
