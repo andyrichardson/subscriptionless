@@ -12,38 +12,61 @@ import { DynamoDB, StepFunctions } from 'aws-sdk';
 import { Subscription, Connection } from './model';
 
 export type ServerArgs = {
+  /** GraphQL schema containing subscriptions. */
   schema: GraphQLSchema;
-  dynamodb: DynamoDB;
+  /** Constructor function for GraphQL context. */
   context?: ((arg: { connectionParams: any }) => object) | object;
-  tableNames?: Partial<TableNames>;
-  pingpong?: {
-    machine: string;
-    delay: number;
+
+  /** Options for server->client ping/pong (recommended). */
+  ping?: {
+    /** Rate at which pings are sent. */
+    interval: number;
+    /** Time for pong response before closing socket. */
     timeout: number;
+    /** State machine resource for dispatching pings. */
+    machineArn: string;
   };
+
+  /** Override default table names. */
+  tableNames?: Partial<TableNames>;
+  /** Override default DynamoDB instance. */
+  dynamodb?: DynamoDB;
+
+  /** Called on incoming API Gateway `$connect` event. */
   onConnect?: (e: { event: APIGatewayEvent }) => MaybePromise<void>;
+  /** Called on incoming API Gateway `$disconnect` event. */
   onDisconnect?: (e: { event: APIGatewayEvent }) => MaybePromise<void>;
-  /* Takes connection_init event and returns payload to be persisted (may include auth steps) */
+
+  /**
+   * Called on incoming graphql-ws `connection_init` message.
+   * Returned value is persisted and provided at context creation on publish events.
+   **/
   onConnectionInit?: (e: {
     event: APIGatewayEvent;
     message: ConnectionInitMessage;
   }) => MaybePromise<object>;
+  /** Called on incoming graphql-ws `subscribe` message. */
   onSubscribe?: (e: {
     event: APIGatewayEvent;
     message: SubscribeMessage;
   }) => MaybePromise<void>;
+  /** Called on graphql-ws `complete` message. */
   onComplete?: (e: {
     event: APIGatewayEvent;
     message: CompleteMessage;
   }) => MaybePromise<void>;
+  /** Called on incoming graphql-ws `ping` message. */
   onPing?: (e: {
     event: APIGatewayEvent;
     message: PingMessage;
   }) => MaybePromise<void>;
+  /** Called on incoming graphql-ws `pong` message. */
   onPong?: (e: {
     event: APIGatewayEvent;
     message: PongMessage;
   }) => MaybePromise<void>;
+
+  /** Called on unexpected errors during resolution of API Gateway or graphql-ws events. */
   onError?: (error: any, context: any) => void;
 };
 
@@ -55,7 +78,7 @@ export type ServerClosure = {
     Subscription: typeof Subscription;
     Connection: typeof Connection;
   };
-} & Omit<ServerArgs, 'tableNames'>;
+} & Omit<ServerArgs, 'tableNames' | 'dynamodb'>;
 
 type TableNames = {
   connections: string;

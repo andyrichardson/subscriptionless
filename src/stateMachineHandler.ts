@@ -19,7 +19,7 @@ export const handleStateMachineEvent =
       return {
         ...input,
         state: 'REVIEW',
-        seconds: c.pingpong!.delay,
+        seconds: c.ping!.timeout,
       };
     }
 
@@ -29,7 +29,7 @@ export const handleStateMachineEvent =
       return {
         ...input,
         state: 'PING',
-        seconds: c.pingpong!.timeout,
+        seconds: c.ping?.interval! - c.ping!.timeout,
       };
     }
 
