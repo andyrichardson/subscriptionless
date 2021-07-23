@@ -853,10 +853,8 @@ const instance = createInstance({
 </details>
 
 <details>
-
-<details>
   
-<summary>📖 Ping (onPong)</summary>
+<summary>📖 Pong (onPong)</summary>
 
 Called on incoming graphql-ws `pong` message.
 
