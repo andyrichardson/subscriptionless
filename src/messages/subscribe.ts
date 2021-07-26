@@ -1,5 +1,5 @@
 import { SubscribeMessage, MessageType } from 'graphql-ws';
-import { validate, parse, GraphQLError } from 'graphql';
+import { validate, parse, execute, GraphQLError } from 'graphql';
 import {
   buildExecutionContext,
   assertValidExecutionArguments,
@@ -44,11 +44,13 @@ export const subscribe: MessageHandler<SubscribeMessage> =
         });
       }
 
+      const contextValue = await constructContext(c)({ connectionParams });
+
       const execContext = buildExecutionContext(
         c.schema,
         parse(message.payload.query),
         undefined,
-        await constructContext(c)({ connectionParams }),
+        contextValue,
         message.payload.variables,
         message.payload.operationName,
         undefined
@@ -65,6 +67,37 @@ export const subscribe: MessageHandler<SubscribeMessage> =
             },
           },
         });
+      }
+
+      if (execContext.operation.operation !== 'subscription') {
+        const result = await execute(
+          c.schema,
+          parse(message.payload.query),
+          undefined,
+          contextValue,
+          message.payload.variables,
+          message.payload.operationName,
+          undefined
+        );
+
+        await sendMessage({
+          ...event.requestContext,
+          message: {
+            type: MessageType.Next,
+            id: message.id,
+            payload: result,
+          },
+        });
+
+        await sendMessage({
+          ...event.requestContext,
+          message: {
+            type: MessageType.Complete,
+            id: message.id,
+          },
+        });
+
+        return;
       }
 
       const [field, root, args, context, info] =
