@@ -40,7 +40,7 @@
   },
   "homepage": "https://github.com/andyrichardson/subscriptionless#readme",
   "devDependencies": {
-    "@types/aws-lambda": "^8.10.78",
+    "@types/aws-lambda": "^8.10.81",
     "aws-sdk": "^2.844.0",
     "graphql": "^15.5.0",
     "graphql-ws": "^5.3.0",
@@ -55,6 +55,7 @@
   },
   "peerDependencies": {
     "aws-sdk": ">= 2.844.0",
-    "graphql": ">= 14.0.0"
+    "graphql": ">= 14.0.0",
+    "graphql-ws": ">= 5.0.0"
   }
 }
