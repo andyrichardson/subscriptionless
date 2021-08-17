@@ -1,5 +1,11 @@
 import { SubscribeMessage, MessageType } from 'graphql-ws';
-import { validate, parse, execute, GraphQLError } from 'graphql';
+import {
+  validate,
+  parse,
+  execute,
+  GraphQLError,
+  ExecutionResult,
+} from 'graphql';
 import {
   buildExecutionContext,
   assertValidExecutionArguments,
@@ -9,6 +15,7 @@ import {
   constructContext,
   deleteConnection,
   getResolverAndArgs,
+  isAsyncIterable,
   promisify,
   sendMessage,
 } from '../utils';
@@ -80,14 +87,20 @@ export const subscribe: MessageHandler<SubscribeMessage> =
           undefined
         );
 
-        await sendMessage({
-          ...event.requestContext,
-          message: {
-            type: MessageType.Next,
-            id: message.id,
-            payload: result,
-          },
-        });
+        // Support for @defer and @stream directives
+        const parts = isAsyncIterable<ExecutionResult>(result)
+          ? result
+          : [result];
+        for await (let part of parts) {
+          await sendMessage({
+            ...event.requestContext,
+            message: {
+              type: MessageType.Next,
+              id: message.id,
+              payload: part,
+            },
+          });
+        }
 
         await sendMessage({
           ...event.requestContext,
