@@ -52,10 +52,10 @@ export const subscribe: MessageHandler<SubscribeMessage> =
       }
 
       const contextValue = await constructContext(c)({ connectionParams });
-
+      const query = parse(message.payload.query);
       const execContext = buildExecutionContext(
         c.schema,
-        parse(message.payload.query),
+        query,
         undefined,
         contextValue,
         message.payload.variables,
@@ -77,15 +77,13 @@ export const subscribe: MessageHandler<SubscribeMessage> =
       }
 
       if (execContext.operation.operation !== 'subscription') {
-        const result = await execute(
-          c.schema,
-          parse(message.payload.query),
-          undefined,
+        const result = await execute({
+          schema: c.schema,
+          document: query,
           contextValue,
-          message.payload.variables,
-          message.payload.operationName,
-          undefined
-        );
+          variableValues: message.payload.variables,
+          operationName: message.payload.operationName,
+        });
 
         // Support for @defer and @stream directives
         const parts = isAsyncIterable<ExecutionResult>(result)
