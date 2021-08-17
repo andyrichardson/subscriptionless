@@ -1,5 +1,11 @@
 import { SubscribeMessage, MessageType } from 'graphql-ws';
-import { validate, parse, execute, GraphQLError } from 'graphql';
+import {
+  validate,
+  parse,
+  execute,
+  GraphQLError,
+  ExecutionResult,
+} from 'graphql';
 import {
   buildExecutionContext,
   assertValidExecutionArguments,
@@ -9,6 +15,7 @@ import {
   constructContext,
   deleteConnection,
   getResolverAndArgs,
+  isAsyncIterable,
   promisify,
   sendMessage,
 } from '../utils';
@@ -45,10 +52,10 @@ export const subscribe: MessageHandler<SubscribeMessage> =
       }
 
       const contextValue = await constructContext(c)({ connectionParams });
-
+      const query = parse(message.payload.query);
       const execContext = buildExecutionContext(
         c.schema,
-        parse(message.payload.query),
+        query,
         undefined,
         contextValue,
         message.payload.variables,
@@ -70,24 +77,28 @@ export const subscribe: MessageHandler<SubscribeMessage> =
       }
 
       if (execContext.operation.operation !== 'subscription') {
-        const result = await execute(
-          c.schema,
-          parse(message.payload.query),
-          undefined,
+        const result = await execute({
+          schema: c.schema,
+          document: query,
           contextValue,
-          message.payload.variables,
-          message.payload.operationName,
-          undefined
-        );
-
-        await sendMessage({
-          ...event.requestContext,
-          message: {
-            type: MessageType.Next,
-            id: message.id,
-            payload: result,
-          },
+          variableValues: message.payload.variables,
+          operationName: message.payload.operationName,
         });
+
+        // Support for @defer and @stream directives
+        const parts = isAsyncIterable<ExecutionResult>(result)
+          ? result
+          : [result];
+        for await (let part of parts) {
+          await sendMessage({
+            ...event.requestContext,
+            message: {
+              type: MessageType.Next,
+              id: message.id,
+              payload: part,
+            },
+          });
+        }
 
         await sendMessage({
           ...event.requestContext,

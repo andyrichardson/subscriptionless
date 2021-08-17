@@ -3,11 +3,11 @@ import {
   equals,
   ConditionExpression,
 } from '@aws/dynamodb-expressions';
-import { parse, execute } from 'graphql';
+import { parse, execute, ExecutionResult } from 'graphql';
 import { MessageType } from 'graphql-ws';
-import { assign, Subscription } from '../model';
+import { Subscription } from '../model';
 import { ServerClosure } from '../types';
-import { constructContext, sendMessage } from '../utils';
+import { constructContext, isAsyncIterable, sendMessage } from '../utils';
 
 type PubSubEvent = {
   topic: string;
@@ -17,24 +17,27 @@ type PubSubEvent = {
 export const publish = (c: ServerClosure) => async (event: PubSubEvent) => {
   const subscriptions = await getFilteredSubs(c)(event);
   const iters = subscriptions.map(async (sub) => {
-    const result = execute(
-      c.schema,
-      parse(sub.subscription.query),
-      event,
-      await constructContext(c)(sub),
-      sub.subscription.variables,
-      sub.subscription.operationName,
-      undefined
-    );
-
-    await sendMessage({
-      ...sub.requestContext,
-      message: {
-        id: sub.subscriptionId,
-        type: MessageType.Next,
-        payload: await result,
-      },
+    const result = execute({
+      schema: c.schema,
+      document: parse(sub.subscription.query),
+      rootValue: event,
+      contextValue: await constructContext(c)(sub),
+      variableValues: sub.subscription.variables,
+      operationName: sub.subscription.operationName,
     });
+
+    // Support for @defer and @stream directives
+    const parts = isAsyncIterable<ExecutionResult>(result) ? result : [result];
+    for await (let part of parts) {
+      await sendMessage({
+        ...sub.requestContext,
+        message: {
+          id: sub.subscriptionId,
+          type: MessageType.Next,
+          payload: part,
+        },
+      });
+    }
   });
   return await Promise.all(iters);
 };
