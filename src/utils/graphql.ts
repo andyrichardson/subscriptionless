@@ -70,7 +70,6 @@ export const prepareResolvers = <T extends object | object[]>(arg: T) =>
 
 const visit = <T = object>(node: T, handler: (node: T) => any) =>
   Object.values(node).forEach((value) => {
-    console.log(value);
     if (typeof value !== 'object') {
       return;
     }
