@@ -25,7 +25,7 @@ export const sendMessage = (
 ) =>
   new ApiGatewayManagementApi({
     apiVersion: 'latest',
-    endpoint: `${a.domainName}/${a.stage}`,
+    endpoint: process.env.SUBSCRIPTIONLESS_MANAGEMENT_API_ENDPOINT || `${a.domainName}/${a.stage}`,
   })
     .postToConnection({
       ConnectionId: a.connectionId!,
@@ -41,7 +41,7 @@ export const deleteConnection = (
 ) =>
   new ApiGatewayManagementApi({
     apiVersion: 'latest',
-    endpoint: `${a.domainName}/${a.stage}`,
+    endpoint: process.env.SUBSCRIPTIONLESS_MANAGEMENT_API_ENDPOINT || `${a.domainName}/${a.stage}`,
   })
     .deleteConnection({ ConnectionId: a.connectionId! })
     .promise();
